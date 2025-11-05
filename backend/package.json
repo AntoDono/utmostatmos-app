@@ -5,9 +5,10 @@
   "main": "server.ts",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon server.ts",
-    "setup": "npx prisma generate && npx prisma migrate dev"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "dev": "nodemon --exec tsx server.ts",
+    "setup:prisma": "npx prisma generate && npx prisma migrate dev",
+    "populate": "tsx setup/populate.js"
   },
   "author": "",
   "license": "ISC",
@@ -23,6 +24,7 @@
     "nodemon": "^3.1.10",
     "prisma": "^6.17.1",
     "supertest": "^7.1.4",
+    "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"

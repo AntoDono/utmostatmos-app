@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma/index.js';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -8,7 +8,6 @@ export interface Session {
     token: string;
     expiresAt: Date;
     createdAt: Date;
-    updatedAt: Date;
 }
 
 const createSession = async (session: Session) => {
@@ -32,9 +31,26 @@ const getSession = async (id: string) => {
     return session;
 }
 
+const validateSession = async (id: string) => {
+    const session = await getSession(id);
+    
+    if (!session) {
+        return null;
+    }
+    
+    // Check if session has expired
+    if (session.expiresAt < new Date()) {
+        // Optionally delete expired session
+        await deleteSession(id);
+        return null;
+    }
+    
+    return session;
+}
+
 const sanitizeSession = (session: any) => {
     const { user, expiresAt, createdAt, updatedAt, ...safeSession } = session;
     return safeSession;
 }   
 
-export { createSession, deleteSession, getSession, sanitizeSession };
+export { createSession, deleteSession, getSession, validateSession, sanitizeSession };
