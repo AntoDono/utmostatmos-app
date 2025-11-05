@@ -3,14 +3,12 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
-
 
 model User {
   id                String    @id @default(uuid())
@@ -34,3 +32,23 @@ model Session {
   expiresAt DateTime
   createdAt DateTime @default(now())
 }
+
+model BinQuiz {
+  id      String   @id @default(uuid())
+  item    String
+  choices String   // JSON array stored as string: ["choice1", "choice2", ...]
+  answer  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tracker {
+  id        String   @id @default(uuid())
+  type      String
+  name      String
+  longitude Float
+  latitude  Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+

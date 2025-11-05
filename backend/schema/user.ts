@@ -1,4 +1,4 @@
-import { PrismaClient } from '../generated/prisma/index.js';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -46,8 +46,26 @@ const updateUser = async (user: User) => {
 
 // Utility function to safely serialize user data without sensitive fields
 const sanitizeUser = (user: any) => {
-    const { password, emailVerified, verificationToken, passwordResetToken, ...safeUser } = user;
+    const { password, verificationToken, passwordResetToken, ...safeUser } = user;
     return safeUser;
 };
 
-export { createUser, deleteUser, updateUser, sanitizeUser };
+const getTopUsers = async (limit: number = 10) => {
+    const users = await prisma.user.findMany({
+        take: limit,
+        orderBy: { leaderboardScore: 'desc' },
+        select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            leaderboardScore: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
+        }
+    });
+    return users;
+};
+
+export { createUser, deleteUser, updateUser, sanitizeUser, getTopUsers };
