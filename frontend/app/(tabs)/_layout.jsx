@@ -6,7 +6,12 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 export default function TabLayout() {
     return (
         <Tabs screenOptions={{
-            headerShown:false
+            headerShown:false,
+            tabBarStyle: {
+                height: '12%',
+                paddingTop: '4%',
+                paddingHorizontal: '2%'
+            }
         }}>
             <Tabs.Screen name='home'
             options= {{
@@ -22,6 +27,11 @@ export default function TabLayout() {
             options= {{
                 tabBarIcon:({color, size})=> <Ionicons name="game-controller-outline" size={size} color={color} />,
                 tabBarLabel:'Quiz'
+            }}/>
+            <Tabs.Screen name='map'
+            options= {{
+                tabBarIcon:({color, size})=> <Ionicons name="map-outline" size={size} color={color} />,
+                tabBarLabel:'Map'
             }}/>
             <Tabs.Screen name='leaderboard'
             options= {{
