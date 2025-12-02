@@ -24,7 +24,12 @@ router.post('/signup', async (req: Request, res: Response) => {
         const newUser = await createUser(user);
         res.status(201).json(sanitizeUser(newUser));
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to create user' });
+        // Check if it's a Prisma unique constraint error (duplicate email)
+        if (error.code === 'P2002' || error.message?.includes('Unique constraint')) {
+            res.status(500).json({ error: error.message || 'Email already exists' });
+        } else {
+            res.status(500).json({ error: error.message || 'Failed to create user' });
+        }
     }
 });
 
@@ -41,7 +46,12 @@ router.post('/delete-account', async (req: Request, res: Response) => {
         const deletedUser = await deleteUser(session.userId);
         res.status(200).json(sanitizeSession(session));
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to delete account' });
+        // If session validation failed, return 401, otherwise 500
+        if (error.message?.includes('Session') || error.message?.includes('session')) {
+            res.status(401).json({ error: 'Session not found or expired' });
+        } else {
+            res.status(500).json({ error: error.message || 'Failed to delete account' });
+        }
     }
 });
 
@@ -58,7 +68,12 @@ router.post('/logout', async (req: Request, res: Response) => {
         const deletedSession = await deleteSession(sessionId);
         res.status(200).json(sanitizeSession(deletedSession));
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to logout' });
+        // If session validation failed, return 401, otherwise 500
+        if (error.message?.includes('Session') || error.message?.includes('session')) {
+            res.status(401).json({ error: 'Session not found or expired' });
+        } else {
+            res.status(500).json({ error: error.message || 'Failed to logout' });
+        }
     }
 });
 
