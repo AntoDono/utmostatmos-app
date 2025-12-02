@@ -40,8 +40,12 @@ const validateSession = async (id: string) => {
     
     // Check if session has expired
     if (session.expiresAt < new Date()) {
-        // Optionally delete expired session
-        await deleteSession(id);
+        // Optionally delete expired session (handle error if already deleted)
+        try {
+            await deleteSession(id);
+        } catch (error) {
+            // Session might already be deleted, ignore error
+        }
         return null;
     }
     

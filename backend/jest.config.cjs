@@ -13,4 +13,5 @@ module.exports = {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  maxWorkers: 1, // Run tests serially to avoid database conflicts
 };

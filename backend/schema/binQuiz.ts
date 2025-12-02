@@ -74,6 +74,15 @@ const getBinQuizzesWithLimit = async (limit: number) => {
 };
 
 const updateBinQuiz = async (binQuiz: BinQuiz) => {
+    // Check if quiz exists first
+    const existingQuiz = await prisma.binQuiz.findUnique({
+        where: { id: binQuiz.id }
+    });
+    
+    if (!existingQuiz) {
+        throw new Error(`BinQuiz with id ${binQuiz.id} not found`);
+    }
+    
     const { id, createdAt, ...rest } = binQuiz;
     const quizData = {
         ...rest,
