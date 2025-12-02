@@ -1,5 +1,6 @@
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
+import { CustomAlert } from "../components/Alert";
 
 export default function RootLayout() {
 
@@ -13,10 +14,13 @@ export default function RootLayout() {
   })
 
   return  (
-  <Stack screenOptions={{
-    headerShown: false
-  }}>
+    <>
+      <Stack screenOptions={{
+        headerShown: false
+      }}>
 
-  </Stack>
+      </Stack>
+      <CustomAlert />
+    </>
   )
 }

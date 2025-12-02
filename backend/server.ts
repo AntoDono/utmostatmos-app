@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import 'dotenv/config';
 import { authRoutes } from './routes/auth.js';
 import { quizRoutes } from './routes/quiz.js';
@@ -7,6 +8,20 @@ import { trackerRoutes } from './routes/tracker.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+// CORS middleware - allow all origins
+if (process.env.NODE_ENV === 'development') {
+  app.use(cors({
+    origin: '*',
+    credentials: true,
+  }));
+}
+else {
+  app.use(cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  }));
+}
 
 // Middleware to parse JSON request bodies
 app.use(express.json());
