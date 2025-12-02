@@ -1,7 +1,9 @@
 import { Text, View, StyleSheet, TextInput, TouchableOpacity, Pressable, ScrollView, Dimensions } from "react-native"
-import React from 'react'
+import React, { useState } from 'react'
 import colors from './../../constants/colors'
 import { useRouter } from 'expo-router'
+import { authAPI } from '../../utils/api'
+import { Alert } from '../../components/Alert'
 
 const { width, height } = Dimensions.get('window');
 
@@ -12,6 +14,42 @@ const responsiveSize = (size) => {
 
 export default function SignUp() {
     const router = useRouter();
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleSignUp = async () => {
+      if (!firstName || !lastName || !email || !password || !confirmPassword) {
+        Alert.alert('Error', 'Please fill in all fields');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        Alert.alert('Error', 'Passwords do not match');
+        return;
+      }
+
+      if (password.length < 6) {
+        Alert.alert('Error', 'Password must be at least 6 characters');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await authAPI.signup(email, password, firstName, lastName);
+        Alert.alert('Success', 'Account created successfully!', [
+          { text: 'OK', onPress: () => router.push('/auth/signIn') }
+        ]);
+      } catch (error) {
+        Alert.alert('Error', error.message || 'Failed to create account');
+      } finally {
+        setLoading(false);
+      }
+    };
+
   return (
     <ScrollView 
       contentContainerStyle={styles.scrollContainer}
@@ -26,15 +64,18 @@ export default function SignUp() {
 
         <View style={styles.formContainer}>
           <TextInput 
-            placeholder="Full Name" 
+            placeholder="First Name" 
             style={styles.textInput}
             placeholderTextColor={colors.GREY}
+            value={firstName}
+            onChangeText={setFirstName}
           />
           <TextInput 
-            placeholder="Username" 
+            placeholder="Last Name" 
             style={styles.textInput}
             placeholderTextColor={colors.GREY}
-            autoCapitalize="none"
+            value={lastName}
+            onChangeText={setLastName}
           />
           <TextInput 
             placeholder="Email" 
@@ -42,6 +83,8 @@ export default function SignUp() {
             placeholderTextColor={colors.GREY}
             keyboardType="email-address"
             autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
           />
           <TextInput 
             placeholder="Password" 
@@ -49,6 +92,8 @@ export default function SignUp() {
             style={styles.textInput}
             placeholderTextColor={colors.GREY}
             autoCapitalize="none"
+            value={password}
+            onChangeText={setPassword}
           />
           <TextInput 
             placeholder="Confirm Password" 
@@ -56,10 +101,18 @@ export default function SignUp() {
             style={styles.textInput}
             placeholderTextColor={colors.GREY}
             autoCapitalize="none"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
           />
 
-          <TouchableOpacity style={styles.signUpButton}>
-            <Text style={styles.signUpButtonText}>Create Account</Text>
+          <TouchableOpacity 
+            style={[styles.signUpButton, loading && styles.signUpButtonDisabled]}
+            onPress={handleSignUp}
+            disabled={loading}
+          >
+            <Text style={styles.signUpButtonText}>
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.loginContainer}>
@@ -138,6 +191,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: colors.WHITE,
     fontSize: responsiveSize(16),
+  },
+  signUpButtonDisabled: {
+    opacity: 0.6,
   },
   loginContainer: {
     alignItems: 'center',

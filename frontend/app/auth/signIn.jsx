@@ -1,7 +1,9 @@
 import { Text, View, StyleSheet, Image, TextInput, TouchableOpacity, Pressable, Dimensions } from "react-native"
-import React from 'react'
+import React, { useState } from 'react'
 import colors from './../../constants/colors'
 import { useRouter } from 'expo-router'
+import { authAPI } from '../../utils/api'
+import { Alert } from '../../components/Alert'
 
 const { width, height } = Dimensions.get('window');
 
@@ -12,6 +14,29 @@ const responsiveSize = (size) => {
 
 export default function SignIn() {
     const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    
+    const handleLogin = async () => {
+      if (!email || !password) {
+        Alert.alert('Error', 'Please enter email and password');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await authAPI.login(email, password);
+        // SessionId is automatically stored by authAPI.login
+        Alert.alert('Success', 'Logged in successfully!', [
+          { text: 'OK', onPress: () => router.push('/(tabs)/home') }
+        ]);
+      } catch (error) {
+        Alert.alert('Error', error.message || 'Failed to login');
+      } finally {
+        setLoading(false);
+      }
+    };
     
   return (
     <View style={styles.container}>
@@ -30,15 +55,21 @@ export default function SignIn() {
 
       <View style={styles.formContainer}>
         <TextInput 
-          placeholder="Username" 
+          placeholder="Email" 
           style={styles.textInput}
           placeholderTextColor={colors.GREY}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
         <TextInput 
           placeholder="Password" 
           secureTextEntry={true} 
           style={styles.textInput}
           placeholderTextColor={colors.GREY}
+          value={password}
+          onChangeText={setPassword}
         />
 
         <Pressable style={styles.forgotPasswordContainer}>
@@ -46,10 +77,11 @@ export default function SignIn() {
         </Pressable>
 
         <TouchableOpacity 
-          style={styles.loginButton}
-          onPress={() => router.push('/./../(tabs)/home')}
+          style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
         >
-          <Text style={styles.loginButtonText}>Login</Text>
+          <Text style={styles.loginButtonText}>{loading ? 'Logging in...' : 'Login'}</Text>
         </TouchableOpacity>
 
         <View style={styles.registerContainer}>
@@ -150,6 +182,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: colors.WHITE,
     fontSize: responsiveSize(16),
+  },
+  loginButtonDisabled: {
+    opacity: 0.6,
   },
   registerContainer: {
     alignItems: 'center',
