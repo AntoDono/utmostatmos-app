@@ -1,9 +1,9 @@
-import { Text, View, StyleSheet, TextInput, TouchableOpacity, Pressable, ScrollView } from "react-native"
+import { Text, View, Image, TextInput, TouchableOpacity, Pressable, ScrollView } from "react-native"
 import React, { useState } from 'react'
-import colors from './../../constants/colors'
 import { useRouter } from 'expo-router'
 import { authAPI } from '../../utils/api'
 import { Alert } from '../../components/Alert'
+import { authStyles } from '../../constants/authStyles'
 
 export default function SignUp() {
     const router = useRouter();
@@ -45,35 +45,40 @@ export default function SignUp() {
 
   return (
     <ScrollView 
-      contentContainerStyle={styles.scrollContainer}
+      contentContainerStyle={authStyles.scrollContainer}
       showsVerticalScrollIndicator={false}
       keyboardShouldPersistTaps="handled"
     >
-      <View style={styles.container}>
+      <View style={authStyles.container}>
         
-        <View style={styles.headerContainer}>
-          <Text style={styles.title}>Sign Up</Text>
+        <View style={authStyles.logoContainer}>
+          <Image 
+            source={require('./../../assets/images/Final-Logo.png')}
+            style={authStyles.logo}
+            resizeMode="contain"
+          /> 
+        </View>
+        
+        <View style={authStyles.headerContainer}>
+          <Text style={authStyles.title}>Sign Up</Text>
         </View>
 
-        <View style={styles.formContainer}>
+        <View style={authStyles.formContainer}>
           <TextInput 
             placeholder="First Name" 
-            style={styles.textInput}
-            placeholderTextColor={colors.GREY}
+            style={authStyles.textInput}
             value={firstName}
             onChangeText={setFirstName}
           />
           <TextInput 
             placeholder="Last Name" 
-            style={styles.textInput}
-            placeholderTextColor={colors.GREY}
+            style={authStyles.textInput}
             value={lastName}
             onChangeText={setLastName}
           />
           <TextInput 
             placeholder="Email" 
-            style={styles.textInput}
-            placeholderTextColor={colors.GREY}
+            style={authStyles.textInput}
             keyboardType="email-address"
             autoCapitalize="none"
             value={email}
@@ -82,8 +87,7 @@ export default function SignUp() {
           <TextInput 
             placeholder="Password" 
             secureTextEntry={true} 
-            style={styles.textInput}
-            placeholderTextColor={colors.GREY}
+            style={authStyles.textInput}
             autoCapitalize="none"
             value={password}
             onChangeText={setPassword}
@@ -91,29 +95,28 @@ export default function SignUp() {
           <TextInput 
             placeholder="Confirm Password" 
             secureTextEntry={true} 
-            style={styles.textInput}
-            placeholderTextColor={colors.GREY}
+            style={authStyles.textInput}
             autoCapitalize="none"
             value={confirmPassword}
             onChangeText={setConfirmPassword}
           />
 
           <TouchableOpacity 
-            style={[styles.signUpButton, loading && styles.signUpButtonDisabled]}
+            style={[authStyles.button, loading && authStyles.buttonDisabled]}
             onPress={handleSignUp}
             disabled={loading}
           >
-            <Text style={styles.signUpButtonText}>
+            <Text style={authStyles.buttonText}>
               {loading ? 'Creating Account...' : 'Create Account'}
             </Text>
           </TouchableOpacity>
 
-          <View style={styles.loginContainer}>
+          <View style={authStyles.linkContainer}>
             <Pressable
               onPress={() => router.push('/auth/signIn')}
             >
-              <Text style={styles.loginText}>
-                Already have an account? <Text style={styles.loginLink}>Login</Text>
+              <Text style={authStyles.linkText}>
+                Already have an account? <Text style={authStyles.linkTextBold}>Login</Text>
               </Text>
             </Pressable>
           </View>
@@ -122,79 +125,3 @@ export default function SignUp() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({ 
-  scrollContainer: {
-    flexGrow: 1,
-  },
-  container: { 
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.WHITE,
-    paddingHorizontal: '10%',
-    paddingVertical: '5%',
-  },
-  headerContainer: {
-    alignItems: 'flex-start',
-    marginBottom: '3%',
-    marginTop: '5%',
-  },
-  title: {
-    fontSize: 24,
-    color: colors.LIGHTGREEN,
-    fontFamily: 'Montserrat-Bold',
-  },
-  formContainer: {
-    width: '100%',
-  },
-  textInput: { 
-    borderWidth: 1, 
-    borderColor: colors.GREY,
-    width: '100%', 
-    padding: '3%',
-    fontSize: 14, 
-    borderRadius: 8,
-    marginBottom: '2%',
-    backgroundColor: colors.WHITE,
-    fontFamily: 'Montserrat-Regular',
-  },
-  signUpButton: {
-    padding: '3%',
-    backgroundColor: colors.LIGHTGREEN,
-    width: '100%',
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginTop: '2%',
-    marginBottom: '3%',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  signUpButtonText: {
-    fontFamily: 'Montserrat-Bold',
-    textAlign: 'center',
-    color: colors.WHITE,
-    fontSize: 14,
-  },
-  signUpButtonDisabled: {
-    opacity: 0.6,
-  },
-  loginContainer: {
-    alignItems: 'center',
-    marginTop: '2%',
-  },
-  loginText: {
-    fontFamily: 'Montserrat-Regular',
-    textAlign: 'center',
-    color: colors.DARKGRAY,
-    fontSize: 14,
-  },
-  loginLink: {
-    color: colors.LIGHTGREEN,
-    fontFamily: 'Montserrat-Bold',
-  },
-});

@@ -1,13 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Modal, TouchableOpacity } from 'react-native';
 import colors from '../constants/colors';
-
-const { width } = Dimensions.get('window');
-
-const responsiveSize = (size) => {
-  const scale = width / 375;
-  return Math.round(size * scale);
-};
 
 class AlertManager {
   constructor() {
@@ -117,14 +110,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: responsiveSize(20),
+    padding: 20,
   },
   alertContainer: {
     backgroundColor: colors.WHITE,
-    borderRadius: responsiveSize(12),
-    padding: responsiveSize(20),
-    width: '100%',
-    maxWidth: responsiveSize(320),
+    borderRadius: 12,
+    padding: 24,
+    width: '90%',
+    maxWidth: 400,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
@@ -132,34 +125,38 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   title: {
-    fontSize: responsiveSize(18),
+    fontSize: 20,
     fontFamily: 'Montserrat-Bold',
     color: colors.DARKGREEN,
-    marginBottom: responsiveSize(12),
+    marginBottom: 12,
     textAlign: 'center',
   },
   message: {
-    fontSize: responsiveSize(16),
+    fontSize: 16,
     fontFamily: 'Montserrat-Regular',
     color: colors.GREY,
-    marginBottom: responsiveSize(20),
+    marginBottom: 24,
     textAlign: 'center',
-    lineHeight: responsiveSize(22),
+    lineHeight: 22,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     flexWrap: 'wrap',
+    gap: 12,
   },
   button: {
-    paddingVertical: responsiveSize(10),
-    paddingHorizontal: responsiveSize(20),
-    borderRadius: responsiveSize(8),
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
     backgroundColor: colors.LIGHTGREEN,
-    minWidth: responsiveSize(80),
+    minWidth: 80,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonSpacing: {
-    marginLeft: responsiveSize(10),
+    marginLeft: 0,
   },
   cancelButton: {
     backgroundColor: colors.WHITE,
@@ -170,7 +167,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF3B30',
   },
   buttonText: {
-    fontSize: responsiveSize(16),
+    fontSize: 16,
     fontFamily: 'Montserrat-Bold',
     color: colors.WHITE,
     textAlign: 'center',
