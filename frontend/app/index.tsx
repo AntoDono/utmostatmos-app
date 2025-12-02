@@ -6,10 +6,7 @@ const router = useRouter()
 
 export default function Index() {
   return (
-    <View style={{
-      flex: 1,
-      backgroundColor: colors.WHITE
-    }}>
+    <View style={styles.mainContainer}>
 
       <View style={styles.container} > 
         <Image 
@@ -19,12 +16,12 @@ export default function Index() {
         /> 
       </View> 
 
-      <TouchableOpacity style={[styles.button, {borderWidth: 1}, {backgroundColor: colors.DARKGREEN}, {marginTop: '20%'}]}
+      <TouchableOpacity style={[styles.button, {borderWidth: 1}, {backgroundColor: colors.DARKGREEN}, styles.loginButton]}
         onPress={()=>router.push('/auth/signIn')}
       >
         <Text style={[styles.buttonText, {color: colors.WHITE}]}>Login</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={[styles.button, {borderWidth: 1}, {backgroundColor: colors.WHITE}, {marginTop: '5%'}]}
+      <TouchableOpacity style={[styles.button, {borderWidth: 1}, {backgroundColor: colors.WHITE}, styles.registerButton]}
         onPress={()=>router.push('/auth/signUp')}
       >
         <Text style={[styles.buttonText, {color: colors.GREY}]}>Register</Text>
@@ -34,14 +31,34 @@ export default function Index() {
 }
 
 const styles = StyleSheet.create({ 
-  container: { width: '100%', height: 250, marginTop: '50%'},  
+  mainContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.WHITE,
+  },
+  container: { 
+    width: '100%', 
+    height: 250,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },  
   image: { width: '100%', height: '100%'},
-  button: { padding: 20, 
-            borderRadius: 10,
-            marginHorizontal: 40,
-          },
-  buttonText: { textAlign: 'center',
-                fontSize: 16,
-                fontFamily: 'Montserrat-Bold',
-          }
+  button: { 
+    padding: 20, 
+    borderRadius: 10,
+    marginHorizontal: 40,
+    width: '80%',
+  },
+  loginButton: {
+    marginTop: 40,
+  },
+  registerButton: {
+    marginTop: 20,
+  },
+  buttonText: { 
+    textAlign: 'center',
+    fontSize: 16,
+    fontFamily: 'Montserrat-Bold',
+  }
 }); 

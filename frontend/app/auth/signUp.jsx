@@ -1,16 +1,9 @@
-import { Text, View, StyleSheet, TextInput, TouchableOpacity, Pressable, ScrollView, Dimensions } from "react-native"
+import { Text, View, StyleSheet, TextInput, TouchableOpacity, Pressable, ScrollView } from "react-native"
 import React, { useState } from 'react'
 import colors from './../../constants/colors'
 import { useRouter } from 'expo-router'
 import { authAPI } from '../../utils/api'
 import { Alert } from '../../components/Alert'
-
-const { width, height } = Dimensions.get('window');
-
-const responsiveSize = (size) => {
-  const scale = width / 375;
-  return Math.round(size * scale);
-};
 
 export default function SignUp() {
     const router = useRouter();
@@ -133,28 +126,24 @@ export default function SignUp() {
 const styles = StyleSheet.create({ 
   scrollContainer: {
     flexGrow: 1,
-    minHeight: height,
   },
   container: { 
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     backgroundColor: colors.WHITE,
-    paddingHorizontal: width * 0.1,
-    paddingVertical: responsiveSize(40),
-    minHeight: height,
+    paddingHorizontal: '10%',
+    paddingVertical: '5%',
   },
   headerContainer: {
     alignItems: 'flex-start',
-    marginBottom: responsiveSize(40),
-    marginTop: height * 0.1,
-    ...(height < 700 && { marginTop: responsiveSize(20) }), // Smaller screens
-    ...(height > 800 && { marginTop: height * 0.15 }), // Larger screens
+    marginBottom: '3%',
+    marginTop: '5%',
   },
   title: {
-    fontSize: responsiveSize(28),
+    fontSize: 24,
     color: colors.LIGHTGREEN,
     fontFamily: 'Montserrat-Bold',
-    ...(width < 375 && { fontSize: responsiveSize(24) }), // Smaller iPhones
-    ...(width > 414 && { fontSize: responsiveSize(32) }), // Larger iPhones
   },
   formContainer: {
     width: '100%',
@@ -163,47 +152,46 @@ const styles = StyleSheet.create({
     borderWidth: 1, 
     borderColor: colors.GREY,
     width: '100%', 
-    padding: responsiveSize(16), 
-    fontSize: responsiveSize(16), 
-    borderRadius: responsiveSize(10),
-    marginBottom: responsiveSize(16),
+    padding: '3%',
+    fontSize: 14, 
+    borderRadius: 8,
+    marginBottom: '2%',
     backgroundColor: colors.WHITE,
     fontFamily: 'Montserrat-Regular',
-    minHeight: responsiveSize(50),
   },
   signUpButton: {
-    padding: responsiveSize(16),
+    padding: '3%',
     backgroundColor: colors.LIGHTGREEN,
     width: '100%',
-    borderRadius: responsiveSize(10),
+    borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    marginTop: responsiveSize(10),
-    marginBottom: responsiveSize(20),
-    minHeight: responsiveSize(50),
+    marginTop: '2%',
+    marginBottom: '3%',
     justifyContent: 'center',
+    alignItems: 'center',
   },
   signUpButtonText: {
     fontFamily: 'Montserrat-Bold',
     textAlign: 'center',
     color: colors.WHITE,
-    fontSize: responsiveSize(16),
+    fontSize: 14,
   },
   signUpButtonDisabled: {
     opacity: 0.6,
   },
   loginContainer: {
     alignItems: 'center',
-    marginTop: responsiveSize(10),
+    marginTop: '2%',
   },
   loginText: {
     fontFamily: 'Montserrat-Regular',
     textAlign: 'center',
     color: colors.DARKGRAY,
-    fontSize: responsiveSize(14),
+    fontSize: 14,
   },
   loginLink: {
     color: colors.LIGHTGREEN,
