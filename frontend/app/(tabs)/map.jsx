@@ -1,23 +1,23 @@
 import { View, Text, StyleSheet, FlatList, ActivityIndicator } from 'react-native'
 import React, { useState, useEffect } from 'react'
-import { quizAPI } from '../../utils/api'
+import { trackerAPI } from '../../utils/api'
 import { Alert } from '../../components/Alert'
 
-export default function Quiz() {
-  const [quizzes, setQuizzes] = useState([]);
+export default function Map() {
+  const [trackers, setTrackers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadQuizzes();
+    loadTrackers();
   }, []);
 
-  const loadQuizzes = async () => {
+  const loadTrackers = async () => {
     try {
       setLoading(true);
-      const response = await quizAPI.getQuizzes(10);
-      setQuizzes(response.quizzes || []);
+      const response = await trackerAPI.getTrackers();
+      setTrackers(response.trackers || []);
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to load quizzes');
+      Alert.alert('Error', error.message || 'Failed to load trackers');
     } finally {
       setLoading(false);
     }
@@ -27,24 +27,27 @@ export default function Quiz() {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" />
-        <Text style={styles.loadingText}>Loading quizzes...</Text>
+        <Text style={styles.loadingText}>Loading trackers...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bin Quiz</Text>
-      {quizzes.length === 0 ? (
-        <Text style={styles.emptyText}>No quizzes available</Text>
+      <Text style={styles.title}>Trackers</Text>
+      {trackers.length === 0 ? (
+        <Text style={styles.emptyText}>No trackers available</Text>
       ) : (
         <FlatList
-          data={quizzes}
+          data={trackers}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <View style={styles.quizItem}>
-              <Text style={styles.quizQuestion}>Item: {item.item}</Text>
-              <Text style={styles.quizAnswer}>Answer: {item.answer}</Text>
+            <View style={styles.trackerItem}>
+              <Text style={styles.trackerName}>{item.name}</Text>
+              <Text style={styles.trackerType}>Type: {item.type}</Text>
+              <Text style={styles.trackerLocation}>
+                Location: {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
+              </Text>
             </View>
           )}
         />
@@ -74,19 +77,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
   },
-  quizItem: {
+  trackerItem: {
     padding: 15,
     marginBottom: 10,
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
   },
-  quizQuestion: {
+  trackerName: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 5,
   },
-  quizAnswer: {
+  trackerType: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 3,
+  },
+  trackerLocation: {
+    fontSize: 12,
+    color: '#999',
   },
 });

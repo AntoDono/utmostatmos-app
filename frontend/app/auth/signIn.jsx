@@ -1,148 +1,92 @@
-import { Text, View, StyleSheet, Image, TextInput, TouchableOpacity, Pressable } from "react-native"
-import React from 'react'
-import colors from './../../constants/colors'
+import { Text, View, Image, TextInput, TouchableOpacity, Pressable } from "react-native"
+import React, { useState } from 'react'
 import { useRouter } from 'expo-router'
+import { authAPI } from '../../utils/api'
+import { Alert } from '../../components/Alert'
+import { authStyles } from '../../constants/authStyles'
 
 export default function SignIn() {
-    const router=useRouter();
-  return (
-    <View style={styles.container}>
+    const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    
+    const handleLogin = async () => {
+      if (!email || !password) {
+        Alert.alert('Error', 'Please enter email and password');
+        return;
+      }
 
-      <View style={styles.logoContainer}>
+      setLoading(true);
+      try {
+        const response = await authAPI.login(email, password);
+        // SessionId is automatically stored by authAPI.login
+        Alert.alert('Success', 'Logged in successfully!', [
+          { text: 'OK', onPress: () => router.push('/(tabs)/home') }
+        ]);
+      } catch (error) {
+        Alert.alert('Error', error.message || 'Failed to login');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+  return (
+    <View style={authStyles.container}>
+
+      <View style={authStyles.logoContainer}>
         <Image 
           source={require('./../../assets/images/Final-Logo.png')}
-          style={styles.logo}
+          style={authStyles.logo}
           resizeMode="contain"
         /> 
       </View> 
       
-      <View style={styles.headerContainer}>
-        <Text style={styles.title}>Welcome Back!</Text>
+      <View style={authStyles.headerContainer}>
+        <Text style={authStyles.title}>Welcome Back!</Text>
       </View>
 
-      <View style={styles.formContainer}>
+      <View style={authStyles.formContainer}>
         <TextInput 
-          placeholder="Username" 
-          style={styles.textInput}
-          placeholderTextColor={colors.GREY}
+          placeholder="Email" 
+          style={authStyles.textInput}
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
         />
         <TextInput 
           placeholder="Password" 
           secureTextEntry={true} 
-          style={styles.textInput}
-          placeholderTextColor={colors.GREY}
+          style={authStyles.textInput}
+          value={password}
+          onChangeText={setPassword}
         />
 
-        <Pressable style={styles.forgotPasswordContainer}>
-          <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+        <Pressable style={authStyles.forgotPasswordContainer}>
+          <Text style={authStyles.forgotPasswordText}>Forgot Password?</Text>
         </Pressable>
 
-        <TouchableOpacity style={styles.loginButton}>
-          <Text style={styles.loginButtonText}>Login</Text>
+        <TouchableOpacity 
+          style={[authStyles.button, loading && authStyles.buttonDisabled]}
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          <Text style={authStyles.buttonText}>{loading ? 'Logging in...' : 'Login'}</Text>
         </TouchableOpacity>
 
-        <View style={styles.registerContainer}>
+        <View style={authStyles.linkContainer}>
           <Pressable 
-          onPress={()=>router.push('/auth/signUp')}
+            onPress={() => router.push('/auth/signUp')}
           >
-            <Text style={styles.registerText}>
-              Don't have an account? <Text style={styles.registerLink}>Register</Text>
+            <Text style={authStyles.linkText}>
+              Don't have an account? <Text style={authStyles.linkTextBold}>Register</Text>
             </Text>
           </Pressable>
         </View>
       </View>
 
-      <View style={styles.footerContainer} />
+      <View style={authStyles.footerContainer} />
     </View>
   );
 }
-
-const styles = StyleSheet.create({ 
-  container: { 
-    flex: 1,
-    backgroundColor: colors.WHITE,
-    paddingHorizontal: '10%',
-    justifyContent: 'space-between',
-  },
-  logoContainer: { 
-    flex: 2,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingBottom: 10,
-  },
-  logo: { 
-    width: '80%', 
-    height: '80%',
-    maxWidth: 200,
-    maxHeight: 200,
-  },
-  headerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  title: {
-    fontSize: 28,
-    color: colors.LIGHTGREEN,
-    fontFamily: 'Montserrat-Bold',
-    textAlign: 'left',
-  },
-  formContainer: {
-    flex: 2,
-    justifyContent: 'center',
-    width: '100%',
-  },
-  textInput: { 
-    borderWidth: 1, 
-    borderColor: colors.GREY,
-    width: '100%', 
-    padding: 16, 
-    fontSize: 16, 
-    borderRadius: 10,
-    marginBottom: 16,
-    backgroundColor: colors.WHITE,
-    fontFamily: 'Montserrat-Regular',
-  },
-  forgotPasswordContainer: {
-    alignSelf: 'flex-end',
-    marginBottom: 24,
-  },
-  forgotPasswordText: {
-    color: colors.LIGHTGREEN,
-    fontFamily: 'Montserrat-Regular',
-    fontSize: 14,
-  },
-  loginButton: {
-    padding: 16,
-    backgroundColor: colors.LIGHTGREEN,
-    width: '100%',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginBottom: 20,
-  },
-  loginButtonText: {
-    fontFamily: 'Montserrat-Bold',
-    textAlign: 'center',
-    color: colors.WHITE,
-    fontSize: 16,
-  },
-  registerContainer: {
-    alignItems: 'center',
-  },
-  registerText: {
-    fontFamily: 'Montserrat-Regular',
-    textAlign: 'center',
-    color: colors.DARKGRAY,
-    fontSize: 14,
-  },
-  registerLink: {
-    color: colors.LIGHTGREEN,
-    fontFamily: 'Montserrat-Bold',
-  },
-  footerContainer: {
-    flex: 1,
-  },
-});

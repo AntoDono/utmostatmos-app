@@ -50,6 +50,13 @@ const sanitizeUser = (user: any) => {
     return safeUser;
 };
 
+const getUserByEmail = async (email: string) => {
+    const user = await prisma.user.findUnique({
+        where: { email }
+    });
+    return user;
+};
+
 const getTopUsers = async (limit: number = 10) => {
     const users = await prisma.user.findMany({
         take: limit,
@@ -68,4 +75,4 @@ const getTopUsers = async (limit: number = 10) => {
     return users;
 };
 
-export { createUser, deleteUser, updateUser, sanitizeUser, getTopUsers };
+export { createUser, deleteUser, updateUser, sanitizeUser, getUserByEmail, getTopUsers };

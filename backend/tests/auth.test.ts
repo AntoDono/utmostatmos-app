@@ -28,7 +28,7 @@ describe('Auth Routes', () => {
       expect(response.body.role).toBe('user');
       expect(response.body.emailVerified).toBe(false);
       expect(response.body.leaderboardScore).toBe(0);
-      
+
       // Verify password is not returned
       expect(response.body).not.toHaveProperty('password');
       expect(response.body).not.toHaveProperty('verificationToken');
@@ -39,10 +39,12 @@ describe('Auth Routes', () => {
         where: { email: userData.email },
       });
       expect(user).toBeTruthy();
-      expect(user?.password).toBe(userData.password);
+      // Verify password is hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
+      expect(user?.password).toMatch(/^\$2[aby]\$/);
+      expect(user?.password).not.toBe(userData.password);
     });
 
-    it('should return 500 if email is missing (Prisma validation)', async () => {
+    it('should return 400 if email is missing', async () => {
       const userData = {
         password: 'password123',
         firstName: 'Test',
@@ -52,12 +54,13 @@ describe('Auth Routes', () => {
       const response = await request(app)
         .post('/auth/signup')
         .send(userData)
-        .expect(500);
+        .expect(400);
 
       expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toBe('All fields are required');
     });
 
-    it('should return 500 if password is missing (Prisma validation)', async () => {
+    it('should return 400 if password is missing', async () => {
       const userData = {
         email: 'test@example.com',
         firstName: 'Test',
@@ -67,10 +70,13 @@ describe('Auth Routes', () => {
       const response = await request(app)
         .post('/auth/signup')
         .send(userData)
-        .expect(500);
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toBe('All fields are required');
     });
 
-    it('should return 500 if firstName is missing (Prisma validation)', async () => {
+    it('should return 400 if firstName is missing', async () => {
       const userData = {
         email: 'test@example.com',
         password: 'password123',
@@ -80,10 +86,13 @@ describe('Auth Routes', () => {
       const response = await request(app)
         .post('/auth/signup')
         .send(userData)
-        .expect(500);
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toBe('All fields are required');
     });
 
-    it('should return 500 if lastName is missing (Prisma validation)', async () => {
+    it('should return 400 if lastName is missing', async () => {
       const userData = {
         email: 'test@example.com',
         password: 'password123',
@@ -93,7 +102,10 @@ describe('Auth Routes', () => {
       const response = await request(app)
         .post('/auth/signup')
         .send(userData)
-        .expect(500);
+        .expect(400);
+
+      expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toBe('All fields are required');
     });
 
     it('should not allow duplicate emails', async () => {
@@ -114,9 +126,10 @@ describe('Auth Routes', () => {
       const response = await request(app)
         .post('/auth/signup')
         .send(userData)
-        .expect(500); // Prisma will throw a unique constraint error
+        .expect(409); // Conflict status for duplicate email
 
       expect(response.body).toHaveProperty('error');
+      expect(response.body.error).toBe('User with this email already exists');
     });
   });
 
