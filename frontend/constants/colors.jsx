@@ -5,4 +5,4 @@ export default {
     BROWN: '#B46617',
     YELLOW: '#FABB00',
     GREY: '#808080'
-}
+};
