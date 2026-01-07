@@ -20,7 +20,20 @@ export default function Contests() {
                 'Two letters of recommendation'
             ]
         },
-        // Add more scholarships as needed
+        {
+            id: 1,
+            title: 'Environmental Contest',
+            organization: 'Utmost Atmos',
+            scope: 'National',
+            grade: '9-12',
+            deadline: 'March 15, 2026',
+            prize: '$5,000 scholarship',
+            description: 'A scholarship program that lets students apply their knowledge and compete for first place',
+            requirements: [
+                'Essay on environmental impact',
+                'Two letters of recommendation'
+            ]
+        }
     ]
 
     const toggleExpand = (id) => {

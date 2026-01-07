@@ -52,7 +52,7 @@ export default function Quiz() {
       setScore(score + 1);
     }
 
-    // Auto-advance after 2 seconds
+    // Auto-advance after 1 second
     setTimeout(() => {
       if (currentQuizIndex === quizzes.length - 1) {
         // Last question - go to results
