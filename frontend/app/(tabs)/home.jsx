@@ -1,5 +1,8 @@
 import React from 'react';
-import { StyleSheet, View, Text, ImageBackground, Dimensions, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, ImageBackground, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { useAuth } from '../../context/AuthContext';
 import home_background from '../../assets/images/home_background.jpg';
 import map from '../../assets/images/map.jpg';
 import grass from '../../assets/images/grass.jpg';
@@ -8,6 +11,18 @@ import sky from '../../assets/images/sky.jpg';
 const { width, height } = Dimensions.get('window');
 
 export default function Home() {
+  const router = useRouter();
+  const { logout, user, isAuthenticated } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   return (
     <ImageBackground 
       source={home_background} 
@@ -19,7 +34,13 @@ export default function Home() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.overlay}>
-          <Text style={[styles.title, { textDecorationLine: 'underline' }]}>Home</Text>
+          {/* Header with logout button */}
+          <View style={styles.header}>
+            <Text style={[styles.title, { textDecorationLine: 'underline' }]}>Home</Text>
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <Ionicons name="log-out-outline" size={24} color="white" />
+            </TouchableOpacity>
+          </View>
 
           {/* BOX 1 */}
           <ImageBackground source={map} style={styles.box} imageStyle={styles.boxImage}>
@@ -81,11 +102,28 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
 
+  header: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: Math.max(20, height * 0.03),
+    position: 'relative',
+  },
+
   title: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: Math.min(45, width * 0.12),
-    marginBottom: Math.max(20, height * 0.03),
+  },
+
+  logoutButton: {
+    position: 'absolute',
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    padding: 8,
   },
 
   box: {

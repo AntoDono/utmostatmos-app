@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { CustomAlert } from "../components/Alert";
+import { AuthProvider } from "../context/AuthContext";
 
 export default function RootLayout() {
 
@@ -14,13 +15,13 @@ export default function RootLayout() {
   })
 
   return  (
-    <>
+    <AuthProvider>
       <Stack screenOptions={{
         headerShown: false
       }}>
 
       </Stack>
       <CustomAlert />
-    </>
+    </AuthProvider>
   )
 }

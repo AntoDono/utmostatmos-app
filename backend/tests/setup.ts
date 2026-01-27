@@ -16,9 +16,7 @@ afterAll(async () => {
 
 // Clean database before each test
 beforeEach(async () => {
-  await prisma.session.deleteMany();
   await prisma.tracker.deleteMany();
   await prisma.binQuiz.deleteMany();
   await prisma.user.deleteMany();
 });
-

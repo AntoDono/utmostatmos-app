@@ -9,42 +9,38 @@ async function populate() {
   try {
     // Clear existing data
     console.log('Clearing existing data...');
-    await prisma.session.deleteMany();
     await prisma.tracker.deleteMany();
     await prisma.binQuiz.deleteMany();
     await prisma.user.deleteMany();
 
-    // Create Users
-    console.log('Creating users...');
+    // Create Users (with Auth0 IDs - these would be real Auth0 IDs in production)
+    console.log('Creating sample users...');
     const users = [
       {
         id: uuidv4(),
+        auth0Id: 'auth0|sample-alice-001',
         email: 'alice@example.com',
-        password: 'password123',
         firstName: 'Alice',
         lastName: 'Smith',
         role: 'user',
-        emailVerified: true,
         leaderboardScore: 150,
       },
       {
         id: uuidv4(),
+        auth0Id: 'auth0|sample-bob-002',
         email: 'bob@example.com',
-        password: 'password123',
         firstName: 'Bob',
         lastName: 'Johnson',
         role: 'user',
-        emailVerified: true,
         leaderboardScore: 200,
       },
       {
         id: uuidv4(),
+        auth0Id: 'auth0|sample-admin-003',
         email: 'admin@example.com',
-        password: 'admin123',
         firstName: 'Admin',
         lastName: 'User',
         role: 'admin',
-        emailVerified: true,
         leaderboardScore: 0,
       },
     ];
@@ -53,28 +49,6 @@ async function populate() {
       users.map(user => prisma.user.create({ data: user }))
     );
     console.log(`Created ${createdUsers.length} users`);
-
-    // Create Sessions
-    console.log('Creating sessions...');
-    const sessions = [
-      {
-        id: uuidv4(),
-        userId: createdUsers[0].id,
-        token: uuidv4(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      },
-      {
-        id: uuidv4(),
-        userId: createdUsers[1].id,
-        token: uuidv4(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      },
-    ];
-
-    const createdSessions = await Promise.all(
-      sessions.map(session => prisma.session.create({ data: session }))
-    );
-    console.log(`Created ${createdSessions.length} sessions`);
 
     // Create Bin Quizzes - "Where does this {item} belong to?"
     console.log('Creating bin quizzes...');
@@ -258,10 +232,10 @@ async function populate() {
 
     console.log('\n✅ Database population completed successfully!');
     console.log(`\nSummary:`);
-    console.log(`- Users: ${createdUsers.length}`);
-    console.log(`- Sessions: ${createdSessions.length}`);
+    console.log(`- Users: ${createdUsers.length} (sample Auth0 users for testing)`);
     console.log(`- Bin Quizzes: ${createdQuizzes.length}`);
     console.log(`- Trackers: ${createdTrackers.length}`);
+    console.log(`\nNote: Real users will be created automatically when they log in via Auth0.`);
 
   } catch (error) {
     console.error('Error populating database:', error);
@@ -276,4 +250,3 @@ populate()
     console.error(error);
     process.exit(1);
   });
-

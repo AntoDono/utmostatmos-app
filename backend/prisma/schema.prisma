@@ -11,26 +11,15 @@ datasource db {
 }
 
 model User {
-  id                String    @id @default(uuid())
-  email             String    @unique
-  password          String
-  firstName         String
-  lastName          String
-  emailVerified     Boolean   @default(false)
-  verificationToken String?   @unique
-  passwordResetToken String? @unique
-  leaderboardScore  Int       @default(0)
-  role              String    @default("user") // "user", "admin", "moderator", etc.
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-}
-
-model Session {
-  id        String   @id @default(uuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id               String   @id @default(uuid())
+  auth0Id          String   @unique // Auth0 user ID (sub claim)
+  email            String   @unique
+  firstName        String?
+  lastName         String?
+  leaderboardScore Int      @default(0)
+  role             String   @default("user") // "user", "admin", "moderator", etc.
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
 
 model BinQuiz {
