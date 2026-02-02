@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router'
 import { useAuth } from '../../context/AuthContext'
 import { Alert } from '../../components/Alert'
 import { authStyles } from '../../constants/authStyles'
+import colors from '../../constants/colors'
 
 export default function SignUp() {
     const router = useRouter();
@@ -56,10 +57,10 @@ export default function SignUp() {
 
         <View style={authStyles.formContainer}>
           {isLoading ? (
-            <ActivityIndicator size="large" color="#0C3B2E" style={{ marginVertical: 20 }} />
+            <ActivityIndicator size="large" color={colors.primaryDark} style={{ marginVertical: 20 }} />
           ) : (
             <>
-              <Text style={{ textAlign: 'center', marginBottom: 20, color: '#666' }}>
+              <Text style={{ textAlign: 'center', marginBottom: 20, color: colors.textSecondary }}>
                 Click below to create your account using Auth0's secure sign-up.
               </Text>
 

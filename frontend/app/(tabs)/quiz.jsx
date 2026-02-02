@@ -1,5 +1,54 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Image, Pressable, Animated } from 'react-native'
+import React, { useState, useEffect, useRef } from 'react'
+import colors from '../../constants/colors'
+
+// Interactive Bin Option Component
+const BinOption = ({ bin, onPress, disabled, isCorrect }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.95,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 4,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      speed: 50,
+      bounciness: 8,
+    }).start();
+  };
+
+  return (
+    <Pressable
+      onPress={onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={disabled}
+      style={styles.binOption}
+    >
+      <Animated.View
+        style={[
+          styles.binContainer,
+          { transform: [{ scale: scaleAnim }] },
+          isCorrect && styles.correctBinContainer,
+        ]}
+      >
+        <Image
+          source={bin.image}
+          style={styles.binImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.binLabel}>{bin.label}</Text>
+      </Animated.View>
+    </Pressable>
+  );
+};
 
 export default function Quiz() {
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
@@ -23,9 +72,9 @@ export default function Quiz() {
   ];
 
   const bins = [
-    { id: 'waste', label: 'Waste' },
-    { id: 'recycle', label: 'Recycle' },
-    { id: 'compost', label: 'Compost' }
+    { id: 'waste', label: 'Waste', image: require('../../assets/images/waste.png') },
+    { id: 'recycle', label: 'Recycle', image: require('../../assets/images/recycle.png') },
+    { id: 'compost', label: 'Compost', image: require('../../assets/images/compost.png') }
   ];
 
   const handleAnswer = (selectedBin) => {
@@ -142,12 +191,15 @@ export default function Quiz() {
           </View>
         ))}
 
-        <TouchableOpacity
-          style={styles.playAgainButton}
+        <Pressable
+          style={({ pressed }) => [
+            styles.playAgainButton,
+            pressed && styles.buttonPressed
+          ]}
           onPress={resetQuiz}
         >
           <Text style={styles.playAgainButtonText}>Play Again</Text>
-        </TouchableOpacity>
+        </Pressable>
       </ScrollView>
     );
   }
@@ -177,39 +229,40 @@ export default function Quiz() {
       {/* Bin Options */}
       <View style={styles.binsContainer}>
         {bins.map((bin) => (
-          <TouchableOpacity
+          <BinOption
             key={bin.id}
-            style={styles.binOption}
+            bin={bin}
             onPress={() => handleAnswer(bin.label)}
             disabled={answered}
-          >
-            <View style={[
-              styles.binImagePlaceholder,
-              answered && bin.label === currentQuiz.answer && styles.correctBin
-            ]} />
-            <Text style={styles.binLabel}>{bin.label}</Text>
-          </TouchableOpacity>
+            isCorrect={answered && bin.label === currentQuiz.answer}
+          />
         ))}
       </View>
 
       {/* Skip Button */}
-      <TouchableOpacity
-        style={styles.skipButton}
+      <Pressable
+        style={({ pressed }) => [
+          styles.skipButton,
+          pressed && styles.buttonPressed
+        ]}
         onPress={skipQuestion}
         disabled={answered}
       >
         <Text style={[styles.skipButtonText, answered && styles.disabledText]}>
           Next Question
         </Text>
-      </TouchableOpacity>
+      </Pressable>
 
       {/* Restart Button */}
-      <TouchableOpacity
-        style={styles.restartButton}
+      <Pressable
+        style={({ pressed }) => [
+          styles.restartButton,
+          pressed && styles.buttonPressed
+        ]}
         onPress={resetQuiz}
       >
         <Text style={styles.restartButtonText}>Restart Quiz</Text>
-      </TouchableOpacity>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -217,7 +270,7 @@ export default function Quiz() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.background,
   },
   contentContainer: {
     paddingHorizontal: 20,
@@ -225,36 +278,58 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: colors.primaryDark,
     textAlign: 'center',
-    marginBottom: 20,
+    marginBottom: 25,
+    textShadowColor: 'rgba(109, 151, 115, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   scoreText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     textAlign: 'center',
     marginBottom: 5,
-    color: '#333',
+    color: colors.text,
+    backgroundColor: colors.surface,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    alignSelf: 'center',
+    overflow: 'hidden',
   },
   questionNumber: {
     fontSize: 14,
     textAlign: 'center',
-    color: '#666',
+    color: colors.textMuted,
     marginBottom: 20,
+    fontWeight: '500',
   },
   question: {
     fontSize: 20,
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: 30,
-    color: '#000',
-    paddingHorizontal: 10,
+    color: colors.text,
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   itemText: {
     fontWeight: 'bold',
     textDecorationLine: 'underline',
+    color: colors.primary,
   },
   itemImageContainer: {
     alignItems: 'center',
@@ -263,7 +338,7 @@ const styles = StyleSheet.create({
   itemImagePlaceholder: {
     width: 120,
     height: 120,
-    backgroundColor: '#d3d3d3',
+    backgroundColor: colors.backgroundDark,
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
@@ -271,7 +346,7 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
   },
@@ -280,108 +355,139 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 30,
     paddingHorizontal: 20,
-    gap: 15,
+    gap: 20,
   },
   binOption: {
-    alignItems: 'center',
-    width: 80,
+    
   },
-  binImagePlaceholder: {
-    width: 80,
-    height: 100,
-    backgroundColor: '#d3d3d3',
-    borderRadius: 8,
+  binContainer: {
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 6,
+    borderWidth: 2,
+    borderColor: colors.border,
+  },
+  correctBinContainer: {
+    borderWidth: 3,
+    borderColor: colors.success,
+    backgroundColor: colors.successLight,
+    shadowColor: colors.success,
+    shadowOpacity: 0.3,
+  },
+  binImage: {
+    width: 70,
+    height: 70,
     marginBottom: 8,
   },
-  correctBin: {
-    borderWidth: 3,
-    borderColor: '#4CAF50',
-  },
   binLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
-    color: '#000',
+    color: colors.text,
     textAlign: 'center',
   },
   skipButton: {
     alignSelf: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
     marginBottom: 15,
+    borderRadius: 10,
+    backgroundColor: colors.primaryMuted,
   },
   skipButtonText: {
-    color: '#007AFF',
+    color: colors.primary,
     fontSize: 16,
+    fontWeight: '600',
   },
   disabledText: {
-    color: '#999',
+    color: colors.buttonDisabled,
   },
   restartButton: {
     alignSelf: 'center',
-    backgroundColor: '#f0f0f0',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    backgroundColor: colors.backgroundDark,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
     marginBottom: 20,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   restartButtonText: {
-    color: '#333',
+    color: colors.textSecondary,
     fontSize: 16,
     fontWeight: '600',
+  },
+  buttonPressed: {
+    opacity: 0.7,
+    transform: [{ scale: 0.98 }],
   },
   // Results Page Styles
   resultsTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: colors.primaryDark,
     textAlign: 'center',
     marginBottom: 30,
   },
   scoreCard: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 15,
     padding: 30,
     alignItems: 'center',
     marginBottom: 30,
     borderWidth: 2,
-    borderColor: '#007AFF',
+    borderColor: colors.primary,
   },
   finalScoreText: {
     fontSize: 18,
-    color: '#666',
+    color: colors.textSecondary,
     marginBottom: 10,
   },
   finalScore: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: colors.primary,
     marginBottom: 5,
   },
   percentageText: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: colors.success,
     marginBottom: 15,
   },
   scoreMessage: {
     fontSize: 16,
-    color: '#333',
+    color: colors.text,
     textAlign: 'center',
     fontWeight: '500',
   },
   reviewTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.text,
     marginBottom: 15,
   },
   answerCard: {
-    backgroundColor: '#f8f8f8',
+    backgroundColor: colors.surfaceElevated,
     borderRadius: 10,
     padding: 15,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: colors.border,
   },
   answerHeader: {
     flexDirection: 'row',
@@ -392,22 +498,22 @@ const styles = StyleSheet.create({
   questionNumberText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: colors.textSecondary,
   },
   correctBadge: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#4CAF50',
+    color: colors.success,
   },
   incorrectBadge: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#f44336',
+    color: colors.error,
   },
   answerQuestion: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: colors.text,
     marginBottom: 10,
   },
   answerDetails: {
@@ -416,34 +522,42 @@ const styles = StyleSheet.create({
   },
   answerLabel: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
   },
   answerValue: {
     fontSize: 14,
     fontWeight: '600',
   },
   correctAnswer: {
-    color: '#4CAF50',
+    color: colors.success,
   },
   incorrectAnswer: {
-    color: '#f44336',
+    color: colors.error,
   },
   correctAnswerValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#4CAF50',
+    color: colors.success,
   },
   playAgainButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 15,
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
     paddingHorizontal: 40,
-    borderRadius: 10,
+    borderRadius: 12,
     alignSelf: 'center',
     marginTop: 10,
     marginBottom: 20,
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 6,
   },
   playAgainButtonText: {
-    color: '#fff',
+    color: colors.textOnPrimary,
     fontSize: 18,
     fontWeight: 'bold',
   },

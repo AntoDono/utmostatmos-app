@@ -3,6 +3,7 @@ import { StyleSheet, View, Text, ImageBackground, Dimensions, ScrollView, Toucha
 import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useAuth } from '../../context/AuthContext';
+import colors from '../../constants/colors';
 import home_background from '../../assets/images/home_background.jpg';
 import map from '../../assets/images/map.jpg';
 import grass from '../../assets/images/grass.jpg';
@@ -121,7 +122,7 @@ const styles = StyleSheet.create({
   logoutButton: {
     position: 'absolute',
     right: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: colors.overlay,
     borderRadius: 20,
     padding: 8,
   },

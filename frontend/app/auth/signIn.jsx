@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router'
 import { useAuth } from '../../context/AuthContext'
 import { Alert } from '../../components/Alert'
 import { authStyles } from '../../constants/authStyles'
+import colors from '../../constants/colors'
 
 export default function SignIn() {
     const router = useRouter();
@@ -49,7 +50,7 @@ export default function SignIn() {
 
       <View style={authStyles.formContainer}>
         {isLoading ? (
-          <ActivityIndicator size="large" color="#0C3B2E" style={{ marginVertical: 20 }} />
+          <ActivityIndicator size="large" color={colors.primaryDark} style={{ marginVertical: 20 }} />
         ) : (
           <>
             <TouchableOpacity 

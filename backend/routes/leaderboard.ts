@@ -7,6 +7,8 @@ router.get('/', async (req: Request, res: Response) => {
     try {
         const topUsers = await getTopUsers(10);
 
+        console.log(topUsers);
+
         res.status(200).json({
             leaderboard: topUsers,
             count: topUsers.length,

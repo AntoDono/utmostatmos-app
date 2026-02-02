@@ -5,7 +5,7 @@ export const authStyles = StyleSheet.create({
   // Container styles
   container: {
     flex: 1,
-    backgroundColor: colors.WHITE,
+    backgroundColor: colors.surface,
     paddingHorizontal: 24,
     justifyContent: 'center',
   },
@@ -32,7 +32,7 @@ export const authStyles = StyleSheet.create({
   
   title: {
     fontSize: 28,
-    color: colors.LIGHTGREEN,
+    color: colors.primary,
     fontFamily: 'Montserrat-Bold',
     textAlign: 'center',
   },
@@ -47,14 +47,14 @@ export const authStyles = StyleSheet.create({
   // Input styles
   textInput: {
     borderWidth: 1,
-    borderColor: colors.GREY,
+    borderColor: colors.inputBorder,
     width: '100%',
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 16,
     borderRadius: 8,
     marginBottom: 16,
-    backgroundColor: colors.WHITE,
+    backgroundColor: colors.inputBackground,
     fontFamily: 'Montserrat-Regular',
     height: 48,
   },
@@ -62,10 +62,10 @@ export const authStyles = StyleSheet.create({
   // Button styles
   button: {
     paddingVertical: 14,
-    backgroundColor: colors.LIGHTGREEN,
+    backgroundColor: colors.primary,
     width: '100%',
     borderRadius: 8,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -79,7 +79,7 @@ export const authStyles = StyleSheet.create({
   buttonText: {
     fontFamily: 'Montserrat-Bold',
     textAlign: 'center',
-    color: colors.WHITE,
+    color: colors.textOnPrimary,
     fontSize: 16,
   },
 
@@ -96,12 +96,12 @@ export const authStyles = StyleSheet.create({
   linkText: {
     fontFamily: 'Montserrat-Regular',
     textAlign: 'center',
-    color: colors.DARKGRAY,
+    color: colors.textSecondary,
     fontSize: 14,
   },
 
   linkTextBold: {
-    color: colors.LIGHTGREEN,
+    color: colors.primary,
     fontFamily: 'Montserrat-Bold',
   },
 
@@ -113,7 +113,7 @@ export const authStyles = StyleSheet.create({
   },
 
   forgotPasswordText: {
-    color: colors.LIGHTGREEN,
+    color: colors.primary,
     fontFamily: 'Montserrat-Regular',
     fontSize: 14,
   },
