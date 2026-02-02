@@ -19,10 +19,14 @@ export default function TrackerMap({ onTrackerSelect }) {
       setLoading(true);
       setError(null);
       const response = await trackerAPI.getTrackers();
-      setTrackers(response.trackers || []);
+      if (!response.trackers) {
+        throw new Error('Invalid response: missing trackers data');
+      }
+      setTrackers(response.trackers);
     } catch (err) {
-      setError(err.message || 'Failed to load trackers');
-      Alert.alert('Error', err.message || 'Failed to load trackers');
+      setError(err.message);
+      Alert.alert('Error', err.message);
+      throw err;
     } finally {
       setLoading(false);
     }

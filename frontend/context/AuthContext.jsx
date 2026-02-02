@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth0, Auth0Provider } from 'react-native-auth0';
-import { AUTH0_DOMAIN, AUTH0_CLIENT_ID } from '../constants/config';
+import { Platform } from 'react-native';
+import { AUTH0_DOMAIN, AUTH0_CLIENT_ID, getAuth0RedirectUrl } from '../constants/config';
 
 // Create the auth context
 const AuthContext = createContext(null);
@@ -19,6 +20,7 @@ const AuthProviderInner = ({ children }) => {
   const {
     authorize,
     clearSession,
+    clearCredentials,
     user,
     isLoading,
     error,
@@ -26,6 +28,8 @@ const AuthProviderInner = ({ children }) => {
   } = useAuth0();
 
   const [accessToken, setAccessToken] = useState(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Fetch credentials when user changes
   useEffect(() => {
@@ -33,7 +37,12 @@ const AuthProviderInner = ({ children }) => {
       if (user) {
         try {
           const credentials = await getCredentials();
-          setAccessToken(credentials?.accessToken || null);
+          const token = credentials?.accessToken || null;
+          if (token && typeof token === 'string' && token.trim().length > 0) {
+            setAccessToken(token);
+          } else {
+            setAccessToken(null);
+          }
         } catch (err) {
           console.error('Error fetching credentials:', err);
           setAccessToken(null);
@@ -47,37 +56,98 @@ const AuthProviderInner = ({ children }) => {
 
   // Login with Auth0 Universal Login
   const login = async () => {
+    // Prevent concurrent login attempts
+    if (isLoggingIn || isLoggingOut) {
+      console.log('Auth transaction already in progress');
+      return;
+    }
+
     try {
-      await authorize();
+      setIsLoggingIn(true);
+      
+      // Get platform-specific redirect URL
+      const platform = Platform.OS;
+      const redirectUrl = getAuth0RedirectUrl(platform);
+
+      await authorize({
+        scope: 'openid profile email',
+        audience: `https://${AUTH0_DOMAIN}/api/v2/`,
+        ...(redirectUrl && { redirectUrl }), // Only include if defined
+      });
       // Credentials will be fetched by the useEffect above
     } catch (err) {
       console.error('Login error:', err);
       throw err;
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
   // Logout and clear session
   const logout = async () => {
+    // Prevent concurrent logout attempts
+    if (isLoggingOut || isLoggingIn) {
+      console.log('Auth transaction already in progress');
+      return;
+    }
+
     try {
-      await clearSession();
+      setIsLoggingOut(true);
+      
+      // Clear local token first
       setAccessToken(null);
+      
+      // For iOS, do local logout to avoid the browser popup
+      if (Platform.OS === 'ios') {
+        // Clear local credentials (removes user and tokens from device)
+        await clearCredentials();
+        console.log('Local logout completed (iOS)');
+        return;
+      }
+      
+      // For Android/Web, do full Auth0 logout
+      const platform = Platform.OS;
+      const redirectUrl = getAuth0RedirectUrl(platform);
+
+      // Try to clear Auth0 session
+      await clearSession({
+        ...(redirectUrl && { redirectUrl }), // Only include if defined
+      });
     } catch (err) {
+      // User may have cancelled the logout - that's okay
+      // Local session is already cleared above
+      if (err.error === 'a0.session.user_cancelled') {
+        console.log('User cancelled logout - local session cleared');
+        return; // Don't throw error
+      }
+      
+      // Handle transaction already active error
+      if (err.message && err.message.includes('TRANSACTION_ACTIVE_ALREADY')) {
+        console.log('Logout transaction already in progress - local session cleared');
+        return; // Don't throw error
+      }
+      
       console.error('Logout error:', err);
-      throw err;
+      // Still don't throw - local state is cleared
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
   // Get current access token (refreshes if needed)
   const getAccessToken = async () => {
-    try {
-      const credentials = await getCredentials();
-      const token = credentials?.accessToken || null;
+    if (!user) {
+      throw new Error('User not logged in');
+    }
+    const credentials = await getCredentials();
+    const token = credentials?.accessToken;
+    
+    if (token && typeof token === 'string' && token.trim().length > 0) {
       setAccessToken(token);
       return token;
-    } catch (err) {
-      console.error('Error getting access token:', err);
-      return null;
     }
+    
+    throw new Error('Invalid or malformed access token received');
   };
 
   const value = {
@@ -89,6 +159,8 @@ const AuthProviderInner = ({ children }) => {
     login,
     logout,
     getAccessToken,
+    isLoggingOut,
+    isLoggingIn,
   };
 
   return (

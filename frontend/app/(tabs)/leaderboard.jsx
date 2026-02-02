@@ -43,9 +43,13 @@ export default function Leaderboard() {
     try {
       setLoading(true);
       const response = await leaderboardAPI.getLeaderboard();
-      setLeaderboard(response.leaderboard || []);
+      if (!response.leaderboard) {
+        throw new Error('Invalid response: missing leaderboard data');
+      }
+      setLeaderboard(response.leaderboard);
     } catch (error) {
-      Alert.alert('Error', error.message || 'Failed to load leaderboard');
+      Alert.alert('Error', error.message);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -112,7 +116,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    paddingTop: 60,
+    paddingTop: 40,
     backgroundColor: colors.background,
   },
   title: {

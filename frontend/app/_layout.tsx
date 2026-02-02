@@ -1,7 +1,9 @@
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { CustomAlert } from "../components/Alert";
+import { NotificationOverlay } from "../components/Notification";
 import { AuthProvider } from "../context/AuthContext";
+import 'react-native-gesture-handler';
 
 export default function RootLayout() {
 
@@ -22,6 +24,7 @@ export default function RootLayout() {
 
       </Stack>
       <CustomAlert />
+      <NotificationOverlay />
     </AuthProvider>
   )
 }

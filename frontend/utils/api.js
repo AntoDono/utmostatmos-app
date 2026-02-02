@@ -77,6 +77,14 @@ export const quizAPI = {
       method: 'GET',
     });
   },
+
+  // Submit quiz answer (requires auth)
+  async submitAnswer(accessToken, points) {
+    return apiRequest('/quiz/submit', {
+      method: 'POST',
+      body: { points },
+    }, accessToken);
+  },
 };
 
 // Leaderboard API
@@ -164,7 +172,13 @@ export const createAuthenticatedAPI = (getAccessTokenFn) => {
         return trackerAPI.deleteTracker(id, token);
       },
     },
-    quizAPI,
+    quizAPI: {
+      ...quizAPI,
+      async submitAnswer(points) {
+        const token = await getAccessTokenFn();
+        return quizAPI.submitAnswer(token, points);
+      },
+    },
     leaderboardAPI,
   };
 };

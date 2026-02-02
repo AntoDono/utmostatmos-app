@@ -18,7 +18,7 @@ router.get('/profile', ...requireAuth, async (req: Request, res: Response): Prom
             user: authReq.user
         });
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to get profile' });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -44,7 +44,7 @@ router.put('/profile', ...requireAuth, async (req: Request, res: Response): Prom
             user: updatedUser
         });
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to update profile' });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -63,7 +63,7 @@ router.delete('/account', ...requireAuth, async (req: Request, res: Response): P
             message: 'Account deleted successfully'
         });
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to delete account' });
+        res.status(500).json({ error: error.message });
     }
 });
 

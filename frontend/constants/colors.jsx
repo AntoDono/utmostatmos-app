@@ -7,6 +7,7 @@ const BASE = {
     BROWN: '#B46617',
     YELLOW: '#FABB00',
     GREY: '#808080',
+    LIGHTERGREY: '#F5F5F5',
 };
 
 // Semantic color palette

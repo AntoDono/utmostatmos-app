@@ -20,7 +20,7 @@ export default function SignUp() {
     // Show error if signup failed
     useEffect(() => {
       if (error) {
-        Alert.alert('Error', error.message || 'Authentication failed');
+        Alert.alert('Error', error.message);
       }
     }, [error]);
 
@@ -31,7 +31,8 @@ export default function SignUp() {
         await login();
         // Navigation will happen automatically via useEffect when isAuthenticated changes
       } catch (err) {
-        Alert.alert('Error', err.message || 'Failed to sign up');
+        Alert.alert('Error', err.message);
+        throw err;
       }
     };
 

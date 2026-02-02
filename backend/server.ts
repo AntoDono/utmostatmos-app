@@ -5,13 +5,13 @@ import { authRoutes } from './routes/auth.js';
 import { quizRoutes } from './routes/quiz.js';
 import { leaderboardRoutes } from './routes/leaderboard.js';
 import { trackerRoutes } from './routes/tracker.js';
+import logger from './utils/logger.js';
 
 // Validate Auth0 environment variables
 const requiredEnvVars = ['AUTH0_DOMAIN', 'AUTH0_AUDIENCE'];
 const missingEnvVars = requiredEnvVars.filter(v => !process.env[v]);
 if (missingEnvVars.length > 0 && !process.env.JEST_WORKER_ID) {
-  console.warn(`Warning: Missing Auth0 environment variables: ${missingEnvVars.join(', ')}`);
-  console.warn('Auth0 authentication will not work until these are configured.');
+  throw new Error(`Missing required environment variables: ${missingEnvVars.join(', ')}`);
 }
 
 const app = express();
@@ -50,6 +50,6 @@ export { app };
 // Jest sets JEST_WORKER_ID when running tests
 if (!process.env.JEST_WORKER_ID) {
     app.listen(port, () => {
-        console.log(`Server listening on port ${port}`);
+        logger.info(`Server listening on port ${port}`);
     });
 }

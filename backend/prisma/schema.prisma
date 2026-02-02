@@ -13,7 +13,7 @@ datasource db {
 model User {
   id               String   @id @default(uuid())
   auth0Id          String   @unique // Auth0 user ID (sub claim)
-  email            String   @unique
+  email            String?  @unique // Optional - may not be in access token
   firstName        String?
   lastName         String?
   leaderboardScore Int      @default(0)

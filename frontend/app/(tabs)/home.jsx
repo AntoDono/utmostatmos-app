@@ -1,8 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, Text, ImageBackground, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import { useAuth } from '../../context/AuthContext';
 import colors from '../../constants/colors';
 import home_background from '../../assets/images/home_background.jpg';
 import map from '../../assets/images/map.jpg';
@@ -13,16 +11,6 @@ const { width, height } = Dimensions.get('window');
 
 export default function Home() {
   const router = useRouter();
-  const { logout, user, isAuthenticated } = useAuth();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.replace('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
 
   return (
     <ImageBackground 
@@ -35,45 +23,46 @@ export default function Home() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.overlay}>
-          {/* Header with logout button */}
-          <View style={styles.header}>
-            <Text style={[styles.title, { textDecorationLine: 'underline' }]}>Home</Text>
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Ionicons name="log-out-outline" size={24} color="white" />
-            </TouchableOpacity>
-          </View>
 
-          {/* BOX 1 */}
-          <ImageBackground source={map} style={styles.box} imageStyle={styles.boxImage}>
-            <Text style={styles.names}>Map</Text>
-            <View style={styles.nextPage}>
-              <Text style={styles.nextPageText}>Go to next page</Text>
-            </View>
-          </ImageBackground>
+          {/* BOX 1 - Map */}
+          <TouchableOpacity onPress={() => router.push('/(tabs)/map')} activeOpacity={0.8}>
+            <ImageBackground source={map} style={styles.box} imageStyle={styles.boxImage}>
+              <Text style={styles.names}>Map</Text>
+              <View style={styles.nextPage}>
+                <Text style={styles.nextPageText}>Go to next page</Text>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
 
-          {/* BOX 2 */}
-          <ImageBackground source={sky} style={styles.box} imageStyle={styles.boxImage}>
-            <Text style={styles.names}>Contests / Scholarships</Text>
-            <View style={styles.nextPage}>
-              <Text style={styles.nextPageText}>Go to next page</Text>
-            </View>
-          </ImageBackground>
+          {/* BOX 2 - Contests */}
+          <TouchableOpacity onPress={() => router.push('/(tabs)/contests')} activeOpacity={0.8}>
+            <ImageBackground source={sky} style={styles.box} imageStyle={styles.boxImage}>
+              <Text style={styles.names}>Contests / Scholarships</Text>
+              <View style={styles.nextPage}>
+                <Text style={styles.nextPageText}>Go to next page</Text>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
 
-          {/* BOX 3 */}
-          <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
-            <Text style={styles.names}>Quiz</Text>
-            <View style={styles.nextPage}>
-              <Text style={styles.nextPageText}>Go to next page</Text>
-            </View>
-          </ImageBackground>
+          {/* BOX 3 - Quiz */}
+          <TouchableOpacity onPress={() => router.push('/(tabs)/quiz')} activeOpacity={0.8}>
+            <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
+              <Text style={styles.names}>Quiz</Text>
+              <View style={styles.nextPage}>
+                <Text style={styles.nextPageText}>Go to next page</Text>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
 
-          {/* BOX 4 */}
-          <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
-            <Text style={styles.names}>Leaderboard</Text>
-            <View style={styles.nextPage}>
-              <Text style={styles.nextPageText}>Go to next page</Text>
-            </View>
-          </ImageBackground>
+          {/* BOX 4 - Leaderboard */}
+          <TouchableOpacity onPress={() => router.push('/(tabs)/leaderboard')} activeOpacity={0.8}>
+            <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
+              <Text style={styles.names}>Leaderboard</Text>
+              <View style={styles.nextPage}>
+                <Text style={styles.nextPageText}>Go to next page</Text>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </ImageBackground>
@@ -99,32 +88,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     paddingVertical: 40,
-    paddingTop: Math.max(60, height * 0.08),
+    paddingTop: Math.max(20, height * 0.03),
     paddingBottom: 40,
-  },
-
-  header: {
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: Math.max(20, height * 0.03),
-    position: 'relative',
-  },
-
-  title: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: Math.min(45, width * 0.12),
-  },
-
-  logoutButton: {
-    position: 'absolute',
-    right: 20,
-    backgroundColor: colors.overlay,
-    borderRadius: 20,
-    padding: 8,
   },
 
   box: {

@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 export interface User {
     id: string;
     auth0Id: string;
-    email: string;
+    email: string | null;
     firstName: string | null;
     lastName: string | null;
     leaderboardScore: number;
@@ -15,7 +15,12 @@ export interface User {
 }
 
 // Find user by Auth0 ID, or create if doesn't exist
-const findOrCreateUserByAuth0Id = async (auth0Id: string, email: string) => {
+const findOrCreateUserByAuth0Id = async (
+    auth0Id: string, 
+    email: string | null,
+    firstName?: string | null,
+    lastName?: string | null
+) => {
     // Try to find existing user
     let user = await prisma.user.findUnique({
         where: { auth0Id }
@@ -27,12 +32,29 @@ const findOrCreateUserByAuth0Id = async (auth0Id: string, email: string) => {
             data: {
                 auth0Id,
                 email,
-                firstName: null,
-                lastName: null,
+                firstName: firstName || null,
+                lastName: lastName || null,
                 leaderboardScore: 0,
                 role: 'user',
             }
         });
+    } else if (firstName || lastName) {
+        // Update existing user's name if provided and different
+        const needsUpdate = 
+            (firstName && user.firstName !== firstName) ||
+            (lastName && user.lastName !== lastName) ||
+            (email && user.email !== email);
+        
+        if (needsUpdate) {
+            user = await prisma.user.update({
+                where: { auth0Id },
+                data: {
+                    ...(firstName && { firstName }),
+                    ...(lastName && { lastName }),
+                    ...(email && { email }),
+                }
+            });
+        }
     }
 
     return user;

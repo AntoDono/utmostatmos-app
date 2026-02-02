@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background,
     },
     header: {
-        paddingTop: 60,
+        paddingTop: 40,
         paddingBottom: 25,
         paddingHorizontal: 20,
         backgroundColor: colors.primaryDark,
