@@ -52,7 +52,7 @@ export const AUTH0_AUDIENCE = getEnvVar('EXPO_PUBLIC_AUTH0_AUDIENCE');
  * Used to construct deep link URLs for Auth0 callbacks on native platforms
  * Format: Reverse domain notation (com.company.appname)
  */
-export const APP_BUNDLE_ID = 'com.antodono.frontend';
+export const APP_BUNDLE_ID = 'org.utmostatmos.utmostatmos';
 
 /**
  * Application URL scheme
@@ -60,7 +60,7 @@ export const APP_BUNDLE_ID = 'com.antodono.frontend';
  * Used for deep linking back to the app from external sources
  * Note: Currently using bundle ID as the scheme for Auth0 callbacks
  */
-export const APP_SCHEME = 'frontend';
+export const APP_SCHEME = 'org.utmostatmos.app';
 
 /**
  * Generates platform-specific Auth0 redirect URL
@@ -75,7 +75,7 @@ export const APP_SCHEME = 'frontend';
  *   {bundleId}://{auth0Domain}/{platform}/{bundleId}/callback
  * 
  * Example output for iOS:
- *   "com.antodono.frontend://dev-kh7qflkc.us.auth0.com/ios/com.antodono.frontend/callback"
+ *   "org.utmostatmos.app://dev-kh7qflkc.us.auth0.com/ios/org.utmostatmos.app/callback"
  * 
  * Important: Add these URLs to Auth0 Dashboard > Settings > Allowed Callback URLs
  */
