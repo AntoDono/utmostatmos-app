@@ -4,6 +4,7 @@
 
 - Node.js (v18 or higher)
 - npm or yarn
+- Auth0 account with a configured tenant
 
 ## 1. Setting Up Prisma
 
@@ -17,6 +18,10 @@ Create a `.env` file in the `backend` directory with the following:
 
 ```env
 DATABASE_URL="file:./prisma/dev.db"
+
+# Auth0 Configuration (required for authentication)
+AUTH0_DOMAIN="your-tenant.auth0.com"
+AUTH0_AUDIENCE="https://api.utmostatmos.com"
 ```
 
 Then, set up Prisma by generating the client and running migrations:
@@ -29,21 +34,39 @@ This command will:
 - Generate the Prisma Client
 - Run database migrations to create all tables
 
-## 2. Populating for Development
+## 2. Auth0 Setup
 
-Populate the database with sample data (users, sessions, bin quizzes, and trackers):
+This application uses Auth0 for authentication. You need to:
+
+1. Create an Auth0 account at https://auth0.com
+2. Create a new API in Auth0 Dashboard:
+   - Go to Applications > APIs > Create API
+   - Set the Identifier to match your `AUTH0_AUDIENCE` (e.g., `https://api.utmostatmos.com`)
+   - Select RS256 as the signing algorithm
+3. Create a Native Application for the mobile app:
+   - Go to Applications > Applications > Create Application
+   - Choose "Native" as the application type
+   - Note the Domain and Client ID for the frontend configuration
+4. Configure callback URLs in the Native Application:
+   - Allowed Callback URLs: `com.utmostatmos.app://callback`
+   - Allowed Logout URLs: `com.utmostatmos.app://logout`
+
+## 3. Populating for Development
+
+Populate the database with sample data (users, bin quizzes, and trackers):
 
 ```bash
 npm run populate
 ```
 
 This will create:
-- 3 sample users (Alice, Bob, Admin)
-- 2 active sessions
+- 3 sample users (with mock Auth0 IDs for testing)
 - 15 bin quiz questions
 - 10 tracker locations
 
-## 3. Running the Server
+Note: Real users are created automatically when they log in via Auth0.
+
+## 4. Running the Server
 
 Start the development server:
 
@@ -59,66 +82,79 @@ To run tests:
 npm test
 ```
 
-## 4. API Endpoints
+## 5. API Endpoints
 
 ### Authentication (`/auth`)
 
-#### POST `/auth/signup`
-Create a new user account.
+All auth endpoints require a valid Auth0 JWT token in the Authorization header:
+```
+Authorization: Bearer <access_token>
+```
+
+#### GET `/auth/profile`
+Get current user profile.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
+
+**Response:** `200 OK`
+```json
+{
+  "user": {
+    "id": "uuid",
+    "auth0Id": "auth0|abc123",
+    "email": "user@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "role": "user",
+    "leaderboardScore": 0,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-01-01T00:00:00.000Z"
+  }
+}
+```
+
+#### PUT `/auth/profile`
+Update user profile.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
+```
 
 **Request Body:**
 ```json
 {
-  "email": "user@example.com",
-  "password": "password123",
   "firstName": "John",
   "lastName": "Doe"
 }
 ```
 
-**Response:** `201 Created`
-```json
-{
-  "id": "uuid",
-  "email": "user@example.com",
-  "firstName": "John",
-  "lastName": "Doe",
-  "role": "user",
-  "emailVerified": false,
-  "leaderboardScore": 0
-}
+**Response:** `200 OK`
+
+#### DELETE `/auth/account`
+Delete user account.
+
+**Headers:**
+```
+Authorization: Bearer <access_token>
 ```
 
-#### POST `/auth/delete-account`
-Delete a user account (requires valid session).
-
-**Request Body:**
+**Response:** `200 OK`
 ```json
 {
-  "sessionId": "session-uuid"
+  "message": "Account deleted successfully"
 }
 ```
-
-**Response:** `200 OK` or `401 Unauthorized` (if session expired/invalid)
-
-#### POST `/auth/logout`
-Logout and delete session (requires valid session).
-
-**Request Body:**
-```json
-{
-  "sessionId": "session-uuid"
-}
-```
-
-**Response:** `200 OK` or `401 Unauthorized` (if session expired/invalid)
 
 ---
 
 ### Quiz (`/quiz`)
 
 #### GET `/quiz`
-Get bin quiz questions.
+Get bin quiz questions (public endpoint).
 
 **Query Parameters:**
 - `limit` (optional): Number of questions to return (default: 10, max: 100)
@@ -151,7 +187,7 @@ GET /quiz?limit=5
 ### Leaderboard (`/leaderboard`)
 
 #### GET `/leaderboard`
-Get top 10 users sorted by leaderboard score.
+Get top 10 users sorted by leaderboard score (public endpoint).
 
 **Response:** `200 OK`
 ```json
@@ -159,6 +195,7 @@ Get top 10 users sorted by leaderboard score.
   "leaderboard": [
     {
       "id": "uuid",
+      "auth0Id": "auth0|abc123",
       "email": "user@example.com",
       "firstName": "John",
       "lastName": "Doe",
@@ -177,7 +214,7 @@ Get top 10 users sorted by leaderboard score.
 ### Tracker (`/tracker`)
 
 #### GET `/tracker`
-Get all trackers or filter by type.
+Get all trackers or filter by type (public endpoint).
 
 **Query Parameters:**
 - `type` (optional): Filter by tracker type (e.g., "recycling", "compost", "trash", "hazardous")
@@ -257,7 +294,7 @@ Health check endpoint.
 
 **Response:** `200 OK`
 ```
-Hello from Express with TypeScript!
+Utmostatmost online.
 ```
 
 ---
@@ -265,7 +302,7 @@ Hello from Express with TypeScript!
 ## Notes
 
 - All endpoints accept and return JSON
-- Session expiration is automatically validated (expired sessions return `401 Unauthorized`)
-- Sensitive user data (passwords, tokens) are never returned in responses
+- Authentication is handled via Auth0 JWT tokens
+- Protected endpoints require `Authorization: Bearer <token>` header
+- Users are automatically created in the database on first login via Auth0
 - The server uses SQLite for the database (file: `prisma/dev.db`)
-

@@ -1,103 +1,67 @@
-import { View, Text, Platform } from 'react-native'
 import React from 'react'
-import { Tabs } from 'expo-router'
-import Ionicons from '@expo/vector-icons/Ionicons';
-import colors from '../../constants/colors';
+import { Drawer } from 'expo-router/drawer'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import CustomDrawerContent from '../../components/Navigation/CustomDrawerContent'
+import CustomHeader from '../../components/Navigation/CustomHeader'
+import colors from '../../constants/colors'
 
-export default function TabLayout() {
+export default function DrawerLayout() {
+    const formatTitle = (name) => {
+        // Handle special cases
+        if (name === 'contests') return 'Contests';
+        if (name === 'leaderboard') return 'Leaderboard';
+        return name.charAt(0).toUpperCase() + name.slice(1);
+    };
+
     return (
-        <Tabs screenOptions={{
-            headerShown: false,
-            tabBarActiveTintColor: colors.LIGHTGREEN,
-            tabBarInactiveTintColor: colors.GREY,
-            tabBarStyle: {
-                height: Platform.OS === 'ios' ? 88 : 68,
-                paddingBottom: Platform.OS === 'ios' ? 28 : 12,
-                paddingTop: Platform.OS === 'ios' ? 8 : 12,
-                paddingHorizontal: 8,
-                backgroundColor: colors.WHITE,
-                borderTopWidth: 1,
-                borderTopColor: '#E5E5E5',
-                elevation: 8,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: -2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-            },
-            tabBarLabelStyle: {
-                fontSize: 12,
-                fontFamily: 'Montserrat-Medium',
-                marginTop: 4,
-            },
-            tabBarIconStyle: {
-                marginBottom: 0,
-            },
-        }}>
-            <Tabs.Screen 
-                name='home'
-                options={{
-                    tabBarIcon: ({ color, focused }) => (
-                        <Ionicons 
-                            name={focused ? "home" : "home-outline"} 
-                            size={24} 
-                            color={color} 
-                        />
-                    ),
-                    tabBarLabel: 'Home'
-                }}
-            />
-            <Tabs.Screen 
-                name='contests'
-                options={{
-                    tabBarIcon: ({ color, focused }) => (
-                        <Ionicons 
-                            name={focused ? "school" : "school-outline"} 
-                            size={24} 
-                            color={color} 
-                        />
-                    ),
-                    tabBarLabel: 'Contests'
-                }}
-            />
-            <Tabs.Screen 
-                name='quiz'
-                options={{
-                    tabBarIcon: ({ color, focused }) => (
-                        <Ionicons 
-                            name={focused ? "game-controller" : "game-controller-outline"} 
-                            size={24} 
-                            color={color} 
-                        />
-                    ),
-                    tabBarLabel: 'Quiz'
-                }}
-            />
-            <Tabs.Screen 
-                name='map'
-                options={{
-                    tabBarIcon: ({ color, focused }) => (
-                        <Ionicons 
-                            name={focused ? "map" : "map-outline"} 
-                            size={24} 
-                            color={color} 
-                        />
-                    ),
-                    tabBarLabel: 'Map'
-                }}
-            />
-            <Tabs.Screen 
-                name='leaderboard'
-                options={{
-                    tabBarIcon: ({ color, focused }) => (
-                        <Ionicons 
-                            name={focused ? "podium" : "podium-outline"} 
-                            size={24} 
-                            color={color} 
-                        />
-                    ),
-                    tabBarLabel: 'Leaderboard'
-                }}
-            />
-        </Tabs>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+            <Drawer
+                drawerContent={(props) => <CustomDrawerContent {...props} />}
+                screenOptions={({ route }) => ({
+                    drawerStyle: {
+                        backgroundColor: colors.WHITE,
+                        width: 280,
+                    },
+                    headerShown: true,
+                    header: () => <CustomHeader title={formatTitle(route.name)} />,
+                })}
+            >
+                <Drawer.Screen
+                    name="home"
+                    options={{
+                        drawerLabel: 'Home',
+                        title: 'Home',
+                    }}
+                />
+                <Drawer.Screen
+                    name="contests"
+                    options={{
+                        drawerLabel: 'Contests',
+                        title: 'Contests',
+                    }}
+                />
+                <Drawer.Screen
+                    name="quiz"
+                    options={{
+                        drawerLabel: 'Quiz',
+                        title: 'Quiz',
+                    }}
+                />
+                <Drawer.Screen
+                    name="map"
+                    options={{
+                        drawerLabel: 'Map',
+                        title: 'Map',
+                    }}
+                />
+                <Drawer.Screen
+                    name="leaderboard"
+                    options={{
+                        drawerLabel: 'Leaderboard',
+                        title: 'Leaderboard',
+                    }}
+                />
+            </Drawer>
+        </GestureHandlerRootView>
     )
 }

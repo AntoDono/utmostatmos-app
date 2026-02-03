@@ -21,7 +21,7 @@ router.get('/', async (req: Request, res: Response) => {
             count: trackers.length,
         });
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to fetch trackers' });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -37,7 +37,7 @@ router.get('/:id', async (req: Request, res: Response) => {
 
         res.status(200).json(tracker);
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to fetch tracker' });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -76,7 +76,7 @@ router.post('/', async (req: Request, res: Response) => {
         const newTracker = await createTracker(tracker);
         res.status(201).json(newTracker);
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to create tracker' });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -115,7 +115,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 
         res.status(200).json(updatedTracker);
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to update tracker' });
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -132,7 +132,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
         const deletedTracker = await deleteTracker(id);
         res.status(200).json(deletedTracker);
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to delete tracker' });
+        res.status(500).json({ error: error.message });
     }
 });
 

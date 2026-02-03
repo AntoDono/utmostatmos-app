@@ -9,44 +9,103 @@ async function populate() {
   try {
     // Clear existing data
     console.log('Clearing existing data...');
-    await prisma.session.deleteMany();
     await prisma.tracker.deleteMany();
     await prisma.binQuiz.deleteMany();
     await prisma.user.deleteMany();
 
-    // Create Users
-    console.log('Creating users...');
+    // Create Users (with Auth0 IDs - these would be real Auth0 IDs in production)
+    console.log('Creating sample users...');
     const users = [
       {
         id: uuidv4(),
+        auth0Id: 'auth0|sample-alice-001',
         email: 'alice@example.com',
-        password: 'password123',
         firstName: 'Alice',
         lastName: 'Smith',
         role: 'user',
-        emailVerified: true,
         leaderboardScore: 150,
       },
       {
         id: uuidv4(),
+        auth0Id: 'auth0|sample-bob-002',
         email: 'bob@example.com',
-        password: 'password123',
         firstName: 'Bob',
         lastName: 'Johnson',
         role: 'user',
-        emailVerified: true,
         leaderboardScore: 200,
       },
       {
         id: uuidv4(),
+        auth0Id: 'auth0|sample-admin-003',
         email: 'admin@example.com',
-        password: 'admin123',
         firstName: 'Admin',
         lastName: 'User',
         role: 'admin',
-        emailVerified: true,
         leaderboardScore: 0,
       },
+      {
+        id: uuidv4(),
+        auth0Id: 'auth0|sample-claire-004',
+        email: 'claire@example.com',
+        firstName: 'Claire',
+        lastName: 'Lee',
+        role: 'user',
+        leaderboardScore: 175,
+      },
+      {
+        id: uuidv4(),
+        auth0Id: 'auth0|sample-daniel-005',
+        email: 'daniel@example.com',
+        firstName: 'Daniel',
+        lastName: 'Kim',
+        role: 'user',
+        leaderboardScore: 120,
+      },
+      {
+        id: uuidv4(),
+        auth0Id: 'auth0|sample-elena-006',
+        email: 'elena@example.com',
+        firstName: 'Elena',
+        lastName: 'Martinez',
+        role: 'user',
+        leaderboardScore: 185,
+      },
+      {
+        id: uuidv4(),
+        auth0Id: 'auth0|sample-fiona-007',
+        email: 'fiona@example.com',
+        firstName: 'Fiona',
+        lastName: 'Wong',
+        role: 'user',
+        leaderboardScore: 160,
+      },
+      {
+        id: uuidv4(),
+        auth0Id: 'auth0|sample-george-008',
+        email: 'george@example.com',
+        firstName: 'George',
+        lastName: 'Brown',
+        role: 'user',
+        leaderboardScore: 220,
+      },
+      {
+        id: uuidv4(),
+        auth0Id: 'auth0|sample-hannah-009',
+        email: 'hannah@example.com',
+        firstName: 'Hannah',
+        lastName: 'Davis',
+        role: 'user',
+        leaderboardScore: 143,
+      },
+      {
+        id: uuidv4(),
+        auth0Id: 'auth0|sample-irene-010',
+        email: 'irene@example.com',
+        firstName: 'Irene',
+        lastName: 'Nguyen',
+        role: 'user',
+        leaderboardScore: 133,
+      }
     ];
 
     const createdUsers = await Promise.all(
@@ -54,119 +113,97 @@ async function populate() {
     );
     console.log(`Created ${createdUsers.length} users`);
 
-    // Create Sessions
-    console.log('Creating sessions...');
-    const sessions = [
-      {
-        id: uuidv4(),
-        userId: createdUsers[0].id,
-        token: uuidv4(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      },
-      {
-        id: uuidv4(),
-        userId: createdUsers[1].id,
-        token: uuidv4(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-      },
-    ];
-
-    const createdSessions = await Promise.all(
-      sessions.map(session => prisma.session.create({ data: session }))
-    );
-    console.log(`Created ${createdSessions.length} sessions`);
-
     // Create Bin Quizzes - "Where does this {item} belong to?"
     console.log('Creating bin quizzes...');
     const binQuizzes = [
       {
         id: uuidv4(),
         item: 'banana',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Compost',
       },
       {
         id: uuidv4(),
         item: 'plastic bottle',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Recycling',
       },
       {
         id: uuidv4(),
         item: 'used battery',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Hazardous Waste']),
-        answer: 'Hazardous Waste',
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
+        answer: 'Trash',
       },
       {
         id: uuidv4(),
         item: 'newspaper',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Recycling',
       },
       {
         id: uuidv4(),
         item: 'apple core',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Compost',
       },
       {
         id: uuidv4(),
         item: 'broken glass',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Hazardous Waste']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Trash',
       },
       {
         id: uuidv4(),
         item: 'cardboard box',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Recycling',
       },
       {
         id: uuidv4(),
         item: 'coffee grounds',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Compost',
       },
       {
         id: uuidv4(),
         item: 'aluminum can',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Recycling',
       },
       {
         id: uuidv4(),
         item: 'plastic bag',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Trash',
       },
       {
         id: uuidv4(),
         item: 'egg shells',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Compost',
       },
       {
         id: uuidv4(),
         item: 'pizza box',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Compost',
       },
       {
         id: uuidv4(),
         item: 'light bulb',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Hazardous Waste']),
-        answer: 'Hazardous Waste',
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
+        answer: 'Trash',
       },
       {
         id: uuidv4(),
         item: 'tin can',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Recycling',
       },
       {
         id: uuidv4(),
         item: 'styrofoam',
-        choices: JSON.stringify(['Compost', 'Recycling', 'Trash', 'Donate']),
+        choices: JSON.stringify(['Compost', 'Recycling', 'Trash']),
         answer: 'Trash',
       },
     ];
@@ -223,8 +260,8 @@ async function populate() {
       },
       {
         id: uuidv4(),
-        type: 'hazardous',
-        name: 'Hazardous Waste Drop-off - City Hall',
+        type: 'trash',
+        name: 'Trash Bin - City Hall',
         longitude: -122.4194,
         latitude: 37.7799,
       },
@@ -258,10 +295,10 @@ async function populate() {
 
     console.log('\n✅ Database population completed successfully!');
     console.log(`\nSummary:`);
-    console.log(`- Users: ${createdUsers.length}`);
-    console.log(`- Sessions: ${createdSessions.length}`);
+    console.log(`- Users: ${createdUsers.length} (sample Auth0 users for testing)`);
     console.log(`- Bin Quizzes: ${createdQuizzes.length}`);
     console.log(`- Trackers: ${createdTrackers.length}`);
+    console.log(`\nNote: Real users will be created automatically when they log in via Auth0.`);
 
   } catch (error) {
     console.error('Error populating database:', error);
@@ -276,4 +313,3 @@ populate()
     console.error(error);
     process.exit(1);
   });
-

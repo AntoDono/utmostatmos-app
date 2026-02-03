@@ -12,7 +12,7 @@ router.get('/', async (req: Request, res: Response) => {
             count: topUsers.length,
         });
     } catch (error: any) {
-        res.status(500).json({ error: error.message || 'Failed to fetch leaderboard' });
+        res.status(500).json({ error: error.message });
     }
 });
 

@@ -1,37 +1,52 @@
 import request from 'supertest';
 import { app } from '../server.js';
 import { PrismaClient } from '@prisma/client';
-import { createUser } from '../schema/user.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
+
+// Helper to create a user with Auth0 schema
+const createTestUser = async (data: {
+  email: string;
+  firstName: string;
+  lastName: string;
+  leaderboardScore: number;
+  role?: string;
+}) => {
+  return prisma.user.create({
+    data: {
+      id: uuidv4(),
+      auth0Id: `auth0|test-${uuidv4()}`,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      leaderboardScore: data.leaderboardScore,
+      role: data.role || 'user',
+    }
+  });
+};
 
 describe('Leaderboard Routes', () => {
   describe('GET /leaderboard', () => {
     it('should return top 10 users sorted by leaderboardScore desc', async () => {
       // Create users with different scores
       const users = [
-        { id: uuidv4(), email: 'user1@test.com', password: 'pass', firstName: 'User', lastName: 'One', leaderboardScore: 100, role: 'user' },
-        { id: uuidv4(), email: 'user2@test.com', password: 'pass', firstName: 'User', lastName: 'Two', leaderboardScore: 250, role: 'user' },
-        { id: uuidv4(), email: 'user3@test.com', password: 'pass', firstName: 'User', lastName: 'Three', leaderboardScore: 50, role: 'user' },
-        { id: uuidv4(), email: 'user4@test.com', password: 'pass', firstName: 'User', lastName: 'Four', leaderboardScore: 300, role: 'user' },
-        { id: uuidv4(), email: 'user5@test.com', password: 'pass', firstName: 'User', lastName: 'Five', leaderboardScore: 150, role: 'user' },
-        { id: uuidv4(), email: 'user6@test.com', password: 'pass', firstName: 'User', lastName: 'Six', leaderboardScore: 200, role: 'user' },
-        { id: uuidv4(), email: 'user7@test.com', password: 'pass', firstName: 'User', lastName: 'Seven', leaderboardScore: 75, role: 'user' },
-        { id: uuidv4(), email: 'user8@test.com', password: 'pass', firstName: 'User', lastName: 'Eight', leaderboardScore: 400, role: 'user' },
-        { id: uuidv4(), email: 'user9@test.com', password: 'pass', firstName: 'User', lastName: 'Nine', leaderboardScore: 175, role: 'user' },
-        { id: uuidv4(), email: 'user10@test.com', password: 'pass', firstName: 'User', lastName: 'Ten', leaderboardScore: 225, role: 'user' },
-        { id: uuidv4(), email: 'user11@test.com', password: 'pass', firstName: 'User', lastName: 'Eleven', leaderboardScore: 125, role: 'user' },
+        { email: 'user1@test.com', firstName: 'User', lastName: 'One', leaderboardScore: 100 },
+        { email: 'user2@test.com', firstName: 'User', lastName: 'Two', leaderboardScore: 250 },
+        { email: 'user3@test.com', firstName: 'User', lastName: 'Three', leaderboardScore: 50 },
+        { email: 'user4@test.com', firstName: 'User', lastName: 'Four', leaderboardScore: 300 },
+        { email: 'user5@test.com', firstName: 'User', lastName: 'Five', leaderboardScore: 150 },
+        { email: 'user6@test.com', firstName: 'User', lastName: 'Six', leaderboardScore: 200 },
+        { email: 'user7@test.com', firstName: 'User', lastName: 'Seven', leaderboardScore: 75 },
+        { email: 'user8@test.com', firstName: 'User', lastName: 'Eight', leaderboardScore: 400 },
+        { email: 'user9@test.com', firstName: 'User', lastName: 'Nine', leaderboardScore: 175 },
+        { email: 'user10@test.com', firstName: 'User', lastName: 'Ten', leaderboardScore: 225 },
+        { email: 'user11@test.com', firstName: 'User', lastName: 'Eleven', leaderboardScore: 125 },
       ];
 
       // Create all users
       for (const user of users) {
-        await createUser({
-          ...user,
-          emailVerified: false,
-          verificationToken: null,
-          passwordResetToken: null,
-        });
+        await createTestUser(user);
       }
 
       const response = await request(app)
@@ -47,7 +62,7 @@ describe('Leaderboard Routes', () => {
       const scores = response.body.leaderboard.map((user: any) => user.leaderboardScore);
       expect(scores).toEqual([400, 300, 250, 225, 200, 175, 150, 125, 100, 75]);
 
-      // Verify users have correct structure (no sensitive data)
+      // Verify users have correct structure
       response.body.leaderboard.forEach((user: any) => {
         expect(user).toHaveProperty('id');
         expect(user).toHaveProperty('email');
@@ -55,29 +70,22 @@ describe('Leaderboard Routes', () => {
         expect(user).toHaveProperty('lastName');
         expect(user).toHaveProperty('leaderboardScore');
         expect(user).toHaveProperty('role');
-        expect(user).not.toHaveProperty('password');
-        expect(user).not.toHaveProperty('verificationToken');
-        expect(user).not.toHaveProperty('passwordResetToken');
+        expect(user).toHaveProperty('auth0Id');
       });
     });
 
     it('should return all users when less than 10 exist', async () => {
       // Create only 5 users
       const users = [
-        { id: uuidv4(), email: 'a@test.com', password: 'pass', firstName: 'A', lastName: 'User', leaderboardScore: 100, role: 'user' },
-        { id: uuidv4(), email: 'b@test.com', password: 'pass', firstName: 'B', lastName: 'User', leaderboardScore: 200, role: 'user' },
-        { id: uuidv4(), email: 'c@test.com', password: 'pass', firstName: 'C', lastName: 'User', leaderboardScore: 300, role: 'user' },
-        { id: uuidv4(), email: 'd@test.com', password: 'pass', firstName: 'D', lastName: 'User', leaderboardScore: 50, role: 'user' },
-        { id: uuidv4(), email: 'e@test.com', password: 'pass', firstName: 'E', lastName: 'User', leaderboardScore: 150, role: 'user' },
+        { email: 'a@test.com', firstName: 'A', lastName: 'User', leaderboardScore: 100 },
+        { email: 'b@test.com', firstName: 'B', lastName: 'User', leaderboardScore: 200 },
+        { email: 'c@test.com', firstName: 'C', lastName: 'User', leaderboardScore: 300 },
+        { email: 'd@test.com', firstName: 'D', lastName: 'User', leaderboardScore: 50 },
+        { email: 'e@test.com', firstName: 'E', lastName: 'User', leaderboardScore: 150 },
       ];
 
       for (const user of users) {
-        await createUser({
-          ...user,
-          emailVerified: false,
-          verificationToken: null,
-          passwordResetToken: null,
-        });
+        await createTestUser(user);
       }
 
       const response = await request(app)
@@ -104,19 +112,14 @@ describe('Leaderboard Routes', () => {
     it('should handle users with same scores correctly', async () => {
       // Create users with duplicate scores
       const users = [
-        { id: uuidv4(), email: 'same1@test.com', password: 'pass', firstName: 'Same', lastName: 'One', leaderboardScore: 100, role: 'user' },
-        { id: uuidv4(), email: 'same2@test.com', password: 'pass', firstName: 'Same', lastName: 'Two', leaderboardScore: 100, role: 'user' },
-        { id: uuidv4(), email: 'same3@test.com', password: 'pass', firstName: 'Same', lastName: 'Three', leaderboardScore: 100, role: 'user' },
-        { id: uuidv4(), email: 'higher@test.com', password: 'pass', firstName: 'Higher', lastName: 'Score', leaderboardScore: 200, role: 'user' },
+        { email: 'same1@test.com', firstName: 'Same', lastName: 'One', leaderboardScore: 100 },
+        { email: 'same2@test.com', firstName: 'Same', lastName: 'Two', leaderboardScore: 100 },
+        { email: 'same3@test.com', firstName: 'Same', lastName: 'Three', leaderboardScore: 100 },
+        { email: 'higher@test.com', firstName: 'Higher', lastName: 'Score', leaderboardScore: 200 },
       ];
 
       for (const user of users) {
-        await createUser({
-          ...user,
-          emailVerified: false,
-          verificationToken: null,
-          passwordResetToken: null,
-        });
+        await createTestUser(user);
       }
 
       const response = await request(app)
@@ -133,58 +136,21 @@ describe('Leaderboard Routes', () => {
       expect(score100Users.length).toBe(3);
     });
 
-    it('should exclude sensitive user data', async () => {
-      const user = await createUser({
-        id: uuidv4(),
-        email: 'test@example.com',
-        password: 'secretpassword',
-        firstName: 'Test',
-        lastName: 'User',
-        leaderboardScore: 500,
-        role: 'user',
-        emailVerified: false,
-        verificationToken: 'some-token',
-        passwordResetToken: 'reset-token',
-      });
-
-      const response = await request(app)
-        .get('/leaderboard')
-        .expect(200);
-
-      const returnedUser = response.body.leaderboard.find((u: any) => u.id === user.id);
-      expect(returnedUser).toBeTruthy();
-      expect(returnedUser).not.toHaveProperty('password');
-      expect(returnedUser).not.toHaveProperty('verificationToken');
-      expect(returnedUser).not.toHaveProperty('passwordResetToken');
-      expect(returnedUser.email).toBe('test@example.com');
-      expect(returnedUser.leaderboardScore).toBe(500);
-    });
-
     it('should include admin users in leaderboard', async () => {
-      const adminUser = await createUser({
-        id: uuidv4(),
+      const adminUser = await createTestUser({
         email: 'admin@test.com',
-        password: 'pass',
         firstName: 'Admin',
         lastName: 'User',
         leaderboardScore: 1000,
         role: 'admin',
-        emailVerified: true,
-        verificationToken: null,
-        passwordResetToken: null,
       });
 
-      const regularUser = await createUser({
-        id: uuidv4(),
+      const regularUser = await createTestUser({
         email: 'regular@test.com',
-        password: 'pass',
         firstName: 'Regular',
         lastName: 'User',
         leaderboardScore: 500,
         role: 'user',
-        emailVerified: false,
-        verificationToken: null,
-        passwordResetToken: null,
       });
 
       const response = await request(app)
@@ -198,4 +164,3 @@ describe('Leaderboard Routes', () => {
     });
   });
 });
-

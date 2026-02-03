@@ -1,14 +1,18 @@
 import { API_URL } from '../constants/config';
-import { storage } from './storage';
 
 // Helper function to make API requests
-const apiRequest = async (endpoint, options = {}) => {
-  const sessionId = await storage.getSessionId();
+// Pass accessToken for authenticated requests
+const apiRequest = async (endpoint, options = {}, accessToken = null) => {
   const method = options.method || 'GET';
   
   const defaultHeaders = {
     'Content-Type': 'application/json',
   };
+
+  // Add Authorization header if access token is provided
+  if (accessToken) {
+    defaultHeaders['Authorization'] = `Bearer ${accessToken}`;
+  }
 
   const config = {
     ...options,
@@ -20,21 +24,10 @@ const apiRequest = async (endpoint, options = {}) => {
   };
 
   // Only add body for POST, PUT, DELETE requests
-  if (method !== 'GET') {
-    // Parse body if it's a string, otherwise use as is
-    let body = options.body;
-    if (typeof body === 'string') {
-      body = JSON.parse(body);
-    } else if (!body) {
-      body = {};
-    }
-
-    // Add sessionId to body if it exists
-    if (sessionId) {
-      body.sessionId = sessionId;
-    }
-
-    config.body = JSON.stringify(body);
+  if (method !== 'GET' && options.body) {
+    config.body = typeof options.body === 'string' 
+      ? options.body 
+      : JSON.stringify(options.body);
   }
 
   try {
@@ -52,72 +45,51 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 };
 
-// Auth API
+// Auth API - now uses Auth0 tokens
 export const authAPI = {
-  // Sign up
-  async signup(email, password, firstName, lastName) {
-    return apiRequest('/auth/signup', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, firstName, lastName }),
-    });
+  // Get current user profile (requires auth)
+  async getProfile(accessToken) {
+    return apiRequest('/auth/profile', { method: 'GET' }, accessToken);
   },
 
-  // Login
-  async login(email, password) {
-    const response = await apiRequest('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    // Store sessionId if returned
-    if (response.sessionId) {
-      await storage.setSessionId(response.sessionId);
-    }
-    return response;
+  // Update user profile (requires auth)
+  async updateProfile(accessToken, { firstName, lastName }) {
+    return apiRequest('/auth/profile', {
+      method: 'PUT',
+      body: { firstName, lastName },
+    }, accessToken);
   },
 
-  // Logout
-  async logout() {
-    const sessionId = await storage.getSessionId();
-    if (!sessionId) {
-      throw new Error('No session found');
-    }
-    const result = await apiRequest('/auth/logout', {
-      method: 'POST',
-      body: JSON.stringify({ sessionId }),
-    });
-    await storage.removeSessionId();
-    return result;
-  },
-
-  // Delete account
-  async deleteAccount() {
-    const sessionId = await storage.getSessionId();
-    if (!sessionId) {
-      throw new Error('No session found');
-    }
-    const result = await apiRequest('/auth/delete-account', {
-      method: 'POST',
-      body: JSON.stringify({ sessionId }),
-    });
-    await storage.removeSessionId();
-    return result;
+  // Delete user account (requires auth)
+  async deleteAccount(accessToken) {
+    return apiRequest('/auth/account', {
+      method: 'DELETE',
+    }, accessToken);
   },
 };
 
 // Quiz API
 export const quizAPI = {
-  // Get quizzes
+  // Get quizzes (public endpoint)
   async getQuizzes(limit = 10) {
     const query = limit ? `?limit=${limit}` : '';
     return apiRequest(`/quiz${query}`, {
       method: 'GET',
     });
   },
+
+  // Submit quiz answer (requires auth)
+  async submitAnswer(accessToken, points) {
+    return apiRequest('/quiz/submit', {
+      method: 'POST',
+      body: { points },
+    }, accessToken);
+  },
 };
 
 // Leaderboard API
 export const leaderboardAPI = {
-  // Get leaderboard
+  // Get leaderboard (public endpoint)
   async getLeaderboard() {
     return apiRequest('/leaderboard', {
       method: 'GET',
@@ -127,7 +99,7 @@ export const leaderboardAPI = {
 
 // Tracker API
 export const trackerAPI = {
-  // Get all trackers or filter by type
+  // Get all trackers or filter by type (public endpoint)
   async getTrackers(type = null) {
     const query = type ? `?type=${encodeURIComponent(type)}` : '';
     return apiRequest(`/tracker${query}`, {
@@ -135,34 +107,78 @@ export const trackerAPI = {
     });
   },
 
-  // Get tracker by ID
+  // Get tracker by ID (public endpoint)
   async getTracker(id) {
     return apiRequest(`/tracker/${id}`, {
       method: 'GET',
     });
   },
 
-  // Create tracker
-  async createTracker(type, name, longitude, latitude) {
+  // Create tracker (could require auth in future)
+  async createTracker(type, name, longitude, latitude, accessToken = null) {
     return apiRequest('/tracker', {
       method: 'POST',
-      body: JSON.stringify({ type, name, longitude, latitude }),
-    });
+      body: { type, name, longitude, latitude },
+    }, accessToken);
   },
 
-  // Update tracker
-  async updateTracker(id, updates) {
+  // Update tracker (could require auth in future)
+  async updateTracker(id, updates, accessToken = null) {
     return apiRequest(`/tracker/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(updates),
-    });
+      body: updates,
+    }, accessToken);
   },
 
-  // Delete tracker
-  async deleteTracker(id) {
+  // Delete tracker (could require auth in future)
+  async deleteTracker(id, accessToken = null) {
     return apiRequest(`/tracker/${id}`, {
       method: 'DELETE',
-    });
+    }, accessToken);
   },
 };
 
+// Helper to create an authenticated API client
+// Usage: const api = createAuthenticatedAPI(getAccessToken);
+//        await api.authAPI.getProfile();
+export const createAuthenticatedAPI = (getAccessTokenFn) => {
+  return {
+    authAPI: {
+      async getProfile() {
+        const token = await getAccessTokenFn();
+        return authAPI.getProfile(token);
+      },
+      async updateProfile(data) {
+        const token = await getAccessTokenFn();
+        return authAPI.updateProfile(token, data);
+      },
+      async deleteAccount() {
+        const token = await getAccessTokenFn();
+        return authAPI.deleteAccount(token);
+      },
+    },
+    trackerAPI: {
+      ...trackerAPI,
+      async createTracker(type, name, longitude, latitude) {
+        const token = await getAccessTokenFn();
+        return trackerAPI.createTracker(type, name, longitude, latitude, token);
+      },
+      async updateTracker(id, updates) {
+        const token = await getAccessTokenFn();
+        return trackerAPI.updateTracker(id, updates, token);
+      },
+      async deleteTracker(id) {
+        const token = await getAccessTokenFn();
+        return trackerAPI.deleteTracker(id, token);
+      },
+    },
+    quizAPI: {
+      ...quizAPI,
+      async submitAnswer(points) {
+        const token = await getAccessTokenFn();
+        return quizAPI.submitAnswer(token, points);
+      },
+    },
+    leaderboardAPI,
+  };
+};

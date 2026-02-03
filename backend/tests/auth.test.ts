@@ -1,374 +1,203 @@
 import request from 'supertest';
 import { app } from '../server.js';
 import { PrismaClient } from '@prisma/client';
-import { createSession } from '../schema/session.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const prisma = new PrismaClient();
 
-describe('Auth Routes', () => {
-  describe('POST /auth/signup', () => {
-    it('should create a new user successfully', async () => {
-      const userData = {
-        email: 'test@example.com',
-        password: 'password123',
-        firstName: 'Test',
-        lastName: 'User',
-      };
+// Mock the express-oauth2-jwt-bearer module
+jest.mock('express-oauth2-jwt-bearer', () => ({
+  auth: () => (req: any, res: any, next: any) => {
+    // Check for Authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'No authorization token was found' });
+    }
 
+    const token = authHeader.split(' ')[1];
+    
+    // For testing, we use the token as the auth0Id
+    // In real scenarios, Auth0 validates and decodes the JWT
+    if (token === 'invalid-token') {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    // Mock the decoded JWT payload
+    req.auth = {
+      payload: {
+        sub: token, // Use token as auth0Id for testing
+        email: `${token}@test.com`,
+      }
+    };
+    
+    next();
+  },
+  requiredScopes: () => (req: any, res: any, next: any) => next(),
+}));
+
+describe('Auth Routes with JWT', () => {
+  beforeEach(async () => {
+    // Clean up users before each test
+    await prisma.user.deleteMany({});
+  });
+
+  describe('GET /auth/profile', () => {
+    it('should return 401 without authorization header', async () => {
       const response = await request(app)
-        .post('/auth/signup')
-        .send(userData)
-        .expect(201);
+        .get('/auth/profile')
+        .expect(401);
 
-      expect(response.body).toHaveProperty('id');
-      expect(response.body.email).toBe(userData.email);
-      expect(response.body.firstName).toBe(userData.firstName);
-      expect(response.body.lastName).toBe(userData.lastName);
-      expect(response.body.role).toBe('user');
-      expect(response.body.emailVerified).toBe(false);
-      expect(response.body.leaderboardScore).toBe(0);
+      expect(response.body).toHaveProperty('error');
+    });
 
-      // Verify password is not returned
-      expect(response.body).not.toHaveProperty('password');
-      expect(response.body).not.toHaveProperty('verificationToken');
-      expect(response.body).not.toHaveProperty('passwordResetToken');
+    it('should return 401 with invalid token', async () => {
+      const response = await request(app)
+        .get('/auth/profile')
+        .set('Authorization', 'Bearer invalid-token')
+        .expect(401);
 
-      // Verify user exists in database
-      const user = await prisma.user.findUnique({
-        where: { email: userData.email },
+      expect(response.body).toHaveProperty('error');
+    });
+
+    it('should create and return user profile for new auth0 user', async () => {
+      const auth0Id = `auth0|${uuidv4()}`;
+      
+      const response = await request(app)
+        .get('/auth/profile')
+        .set('Authorization', `Bearer ${auth0Id}`)
+        .expect(200);
+
+      expect(response.body).toHaveProperty('user');
+      expect(response.body.user).toHaveProperty('id');
+      expect(response.body.user.auth0Id).toBe(auth0Id);
+      expect(response.body.user.email).toBe(`${auth0Id}@test.com`);
+      expect(response.body.user.role).toBe('user');
+      expect(response.body.user.leaderboardScore).toBe(0);
+    });
+
+    it('should return existing user profile', async () => {
+      const auth0Id = `auth0|${uuidv4()}`;
+      
+      // Create user first
+      await prisma.user.create({
+        data: {
+          auth0Id,
+          email: 'existing@example.com',
+          firstName: 'Existing',
+          lastName: 'User',
+          leaderboardScore: 100,
+          role: 'user',
+        }
       });
-      expect(user).toBeTruthy();
-      // Verify password is hashed (bcrypt hashes start with $2a$, $2b$, or $2y$)
-      expect(user?.password).toMatch(/^\$2[aby]\$/);
-      expect(user?.password).not.toBe(userData.password);
-    });
-
-    it('should return 400 if email is missing', async () => {
-      const userData = {
-        password: 'password123',
-        firstName: 'Test',
-        lastName: 'User',
-      };
 
       const response = await request(app)
-        .post('/auth/signup')
-        .send(userData)
-        .expect(400);
+        .get('/auth/profile')
+        .set('Authorization', `Bearer ${auth0Id}`)
+        .expect(200);
 
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('All fields are required');
-    });
-
-    it('should return 400 if password is missing', async () => {
-      const userData = {
-        email: 'test@example.com',
-        firstName: 'Test',
-        lastName: 'User',
-      };
-
-      const response = await request(app)
-        .post('/auth/signup')
-        .send(userData)
-        .expect(400);
-
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('All fields are required');
-    });
-
-    it('should return 400 if firstName is missing', async () => {
-      const userData = {
-        email: 'test@example.com',
-        password: 'password123',
-        lastName: 'User',
-      };
-
-      const response = await request(app)
-        .post('/auth/signup')
-        .send(userData)
-        .expect(400);
-
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('All fields are required');
-    });
-
-    it('should return 400 if lastName is missing', async () => {
-      const userData = {
-        email: 'test@example.com',
-        password: 'password123',
-        firstName: 'Test',
-      };
-
-      const response = await request(app)
-        .post('/auth/signup')
-        .send(userData)
-        .expect(400);
-
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('All fields are required');
-    });
-
-    it('should not allow duplicate emails', async () => {
-      const userData = {
-        email: 'duplicate@example.com',
-        password: 'password123',
-        firstName: 'Test',
-        lastName: 'User',
-      };
-
-      // Create first user
-      await request(app)
-        .post('/auth/signup')
-        .send(userData)
-        .expect(201);
-
-      // Try to create duplicate
-      const response = await request(app)
-        .post('/auth/signup')
-        .send(userData)
-        .expect(409); // Conflict status for duplicate email
-
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('User with this email already exists');
+      expect(response.body.user.auth0Id).toBe(auth0Id);
+      expect(response.body.user.firstName).toBe('Existing');
+      expect(response.body.user.lastName).toBe('User');
+      expect(response.body.user.leaderboardScore).toBe(100);
     });
   });
 
-  describe('POST /auth/delete-account', () => {
-    it('should delete user account successfully', async () => {
-      // Create a user first
-      const userId = uuidv4();
-      const user = await prisma.user.create({
+  describe('PUT /auth/profile', () => {
+    it('should update user profile', async () => {
+      const auth0Id = `auth0|${uuidv4()}`;
+      
+      // Create user first
+      await prisma.user.create({
         data: {
-          id: userId,
-          email: 'delete@example.com',
-          password: 'password123',
-          firstName: 'Delete',
-          lastName: 'User',
+          auth0Id,
+          email: 'update@example.com',
+          firstName: null,
+          lastName: null,
           role: 'user',
-          emailVerified: false,
-        },
-      });
-
-      // Create a session for the user
-      const sessionId = uuidv4();
-      const session = await createSession({
-        id: sessionId,
-        userId: user.id,
-        token: uuidv4(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-        createdAt: new Date(),
+        }
       });
 
       const response = await request(app)
-        .post('/auth/delete-account')
-        .send({ sessionId: session.id })
+        .put('/auth/profile')
+        .set('Authorization', `Bearer ${auth0Id}`)
+        .send({ firstName: 'Updated', lastName: 'Name' })
         .expect(200);
 
-      expect(response.body).toHaveProperty('id');
-      expect(response.body.id).toBe(session.id);
+      expect(response.body.user.firstName).toBe('Updated');
+      expect(response.body.user.lastName).toBe('Name');
+
+      // Verify in database
+      const user = await prisma.user.findUnique({ where: { auth0Id } });
+      expect(user?.firstName).toBe('Updated');
+      expect(user?.lastName).toBe('Name');
+    });
+
+    it('should allow partial updates', async () => {
+      const auth0Id = `auth0|${uuidv4()}`;
+      
+      await prisma.user.create({
+        data: {
+          auth0Id,
+          email: 'partial@example.com',
+          firstName: 'Original',
+          lastName: 'Name',
+          role: 'user',
+        }
+      });
+
+      const response = await request(app)
+        .put('/auth/profile')
+        .set('Authorization', `Bearer ${auth0Id}`)
+        .send({ firstName: 'NewFirst' })
+        .expect(200);
+
+      expect(response.body.user.firstName).toBe('NewFirst');
+      expect(response.body.user.lastName).toBe('Name'); // Unchanged
+    });
+
+    it('should return 401 without authorization', async () => {
+      const response = await request(app)
+        .put('/auth/profile')
+        .send({ firstName: 'Test' })
+        .expect(401);
+
+      expect(response.body).toHaveProperty('error');
+    });
+  });
+
+  describe('DELETE /auth/account', () => {
+    it('should delete user account', async () => {
+      const auth0Id = `auth0|${uuidv4()}`;
+      
+      // Create user first
+      const user = await prisma.user.create({
+        data: {
+          auth0Id,
+          email: 'delete@example.com',
+          firstName: 'Delete',
+          lastName: 'Me',
+          role: 'user',
+        }
+      });
+
+      const response = await request(app)
+        .delete('/auth/account')
+        .set('Authorization', `Bearer ${auth0Id}`)
+        .expect(200);
+
+      expect(response.body.message).toBe('Account deleted successfully');
 
       // Verify user is deleted
-      const deletedUser = await prisma.user.findUnique({
-        where: { id: userId },
-      });
+      const deletedUser = await prisma.user.findUnique({ where: { id: user.id } });
       expect(deletedUser).toBeNull();
     });
 
-    it('should return 401 if session does not exist', async () => {
+    it('should return 401 without authorization', async () => {
       const response = await request(app)
-        .post('/auth/delete-account')
-        .send({ sessionId: uuidv4() })
+        .delete('/auth/account')
         .expect(401);
 
       expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('Session not found or expired');
-    });
-
-    it('should return 401 if sessionId is missing', async () => {
-      const response = await request(app)
-        .post('/auth/delete-account')
-        .send({})
-        .expect(401);
-
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('Session not found or expired');
-    });
-
-    it('should return 401 if session has expired', async () => {
-      // Create a user first
-      const userId = uuidv4();
-      const user = await prisma.user.create({
-        data: {
-          id: userId,
-          email: 'expired@example.com',
-          password: 'password123',
-          firstName: 'Expired',
-          lastName: 'User',
-          role: 'user',
-          emailVerified: false,
-        },
-      });
-
-      // Create an expired session (expired 1 hour ago)
-      const sessionId = uuidv4();
-      const expiredSession = await createSession({
-        id: sessionId,
-        userId: user.id,
-        token: uuidv4(),
-        expiresAt: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
-        createdAt: new Date(),
-      });
-
-      const response = await request(app)
-        .post('/auth/delete-account')
-        .send({ sessionId: expiredSession.id })
-        .expect(401);
-
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('Session not found or expired');
-
-      // Verify expired session was deleted
-      const deletedSession = await prisma.session.findUnique({
-        where: { id: sessionId },
-      });
-      expect(deletedSession).toBeNull();
-    });
-  });
-
-  describe('POST /auth/logout', () => {
-    it('should logout successfully and delete session', async () => {
-      // Create a user first
-      const userId = uuidv4();
-      const user = await prisma.user.create({
-        data: {
-          id: userId,
-          email: 'logout@example.com',
-          password: 'password123',
-          firstName: 'Logout',
-          lastName: 'User',
-          role: 'user',
-          emailVerified: false,
-        },
-      });
-
-      // Create a session for the user
-      const sessionId = uuidv4();
-      const session = await createSession({
-        id: sessionId,
-        userId: user.id,
-        token: uuidv4(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
-        createdAt: new Date(),
-      });
-
-      const response = await request(app)
-        .post('/auth/logout')
-        .send({ sessionId: session.id })
-        .expect(200);
-
-      expect(response.body).toHaveProperty('id');
-      expect(response.body.id).toBe(session.id);
-
-      // Verify session is deleted
-      const deletedSession = await prisma.session.findUnique({
-        where: { id: sessionId },
-      });
-      expect(deletedSession).toBeNull();
-    });
-
-    it('should return 401 if session does not exist', async () => {
-      const response = await request(app)
-        .post('/auth/logout')
-        .send({ sessionId: uuidv4() })
-        .expect(401);
-
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('Session not found or expired');
-    });
-
-    it('should return 401 if sessionId is missing', async () => {
-      const response = await request(app)
-        .post('/auth/logout')
-        .send({})
-        .expect(401);
-
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('Session not found or expired');
-    });
-
-    it('should return 401 if session has expired', async () => {
-      // Create a user first
-      const userId = uuidv4();
-      const user = await prisma.user.create({
-        data: {
-          id: userId,
-          email: 'expiredlogout@example.com',
-          password: 'password123',
-          firstName: 'Expired',
-          lastName: 'Logout',
-          role: 'user',
-          emailVerified: false,
-        },
-      });
-
-      // Create an expired session (expired 1 hour ago)
-      const sessionId = uuidv4();
-      const expiredSession = await createSession({
-        id: sessionId,
-        userId: user.id,
-        token: uuidv4(),
-        expiresAt: new Date(Date.now() - 60 * 60 * 1000), // 1 hour ago
-        createdAt: new Date(),
-      });
-
-      const response = await request(app)
-        .post('/auth/logout')
-        .send({ sessionId: expiredSession.id })
-        .expect(401);
-
-      expect(response.body).toHaveProperty('error');
-      expect(response.body.error).toBe('Session not found or expired');
-
-      // Verify expired session was deleted
-      const deletedSession = await prisma.session.findUnique({
-        where: { id: sessionId },
-      });
-      expect(deletedSession).toBeNull();
-    });
-
-    it('should work with valid non-expired session', async () => {
-      // Create a user first
-      const userId = uuidv4();
-      const user = await prisma.user.create({
-        data: {
-          id: userId,
-          email: 'valid@example.com',
-          password: 'password123',
-          firstName: 'Valid',
-          lastName: 'User',
-          role: 'user',
-          emailVerified: false,
-        },
-      });
-
-      // Create a valid session (expires in 24 hours)
-      const sessionId = uuidv4();
-      const session = await createSession({
-        id: sessionId,
-        userId: user.id,
-        token: uuidv4(),
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
-        createdAt: new Date(),
-      });
-
-      const response = await request(app)
-        .post('/auth/logout')
-        .send({ sessionId: session.id })
-        .expect(200);
-
-      expect(response.body).toHaveProperty('id');
-      expect(response.body.id).toBe(session.id);
     });
   });
 });
-

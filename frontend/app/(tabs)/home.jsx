@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, View, Text, ImageBackground, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import colors from '../../constants/colors';
 import home_background from '../../assets/images/home_background.jpg';
 import map from '../../assets/images/map.jpg';
 import grass from '../../assets/images/grass.jpg';
@@ -22,55 +23,45 @@ export default function Home() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.overlay}>
-          <Text style={[styles.title, { textDecorationLine: 'underline' }]}>Home</Text>
+          {/* BOX 1 - Map */}
+          <TouchableOpacity onPress={() => router.push('/(tabs)/map')} activeOpacity={0.8}>
+            <ImageBackground source={map} style={styles.box} imageStyle={styles.boxImage}>
+              <Text style={styles.names}>Map</Text>
+              <View style={styles.nextPage}>
+                <Text style={styles.nextPageText}>Go to next page</Text>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
 
-          {/* BOX 1 */}
-          <ImageBackground source={map} style={styles.box} imageStyle={styles.boxImage}>
-            <Text style={styles.names}>Map</Text>
-            <TouchableOpacity
-              style={styles.nextPage}
-              onPress={() => router.push('/(tabs)/map')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.nextPageText}>Go to next page</Text>
-            </TouchableOpacity>
-          </ImageBackground>
+          {/* BOX 2 - Contests */}
+          <TouchableOpacity onPress={() => router.push('/(tabs)/contests')} activeOpacity={0.8}>
+            <ImageBackground source={sky} style={styles.box} imageStyle={styles.boxImage}>
+              <Text style={styles.names}>Contests / Scholarships</Text>
+              <View style={styles.nextPage}>
+                <Text style={styles.nextPageText}>Go to next page</Text>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
 
-          {/* BOX 2 */}
-          <ImageBackground source={sky} style={styles.box} imageStyle={styles.boxImage}>
-            <Text style={styles.names}>Contests / Scholarships</Text>
-            <TouchableOpacity
-              style={styles.nextPage}
-              onPress={() => router.push('/(tabs)/contests')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.nextPageText}>Go to next page</Text>
-            </TouchableOpacity>
-          </ImageBackground>
+          {/* BOX 3 - Quiz */}
+          <TouchableOpacity onPress={() => router.push('/(tabs)/quiz')} activeOpacity={0.8}>
+            <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
+              <Text style={styles.names}>Quiz</Text>
+              <View style={styles.nextPage}>
+                <Text style={styles.nextPageText}>Go to next page</Text>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
 
-          {/* BOX 3 */}
-          <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
-            <Text style={styles.names}>Quiz</Text>
-            <TouchableOpacity
-              style={styles.nextPage}
-              onPress={() => router.push('/(tabs)/quiz')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.nextPageText}>Go to next page</Text>
-            </TouchableOpacity>
-          </ImageBackground>
-
-          {/* BOX 4 */}
-          <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
-            <Text style={styles.names}>Leaderboard</Text>
-            <TouchableOpacity
-              style={styles.nextPage}
-              onPress={() => router.push('/(tabs)/leaderboard')}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.nextPageText}>Go to next page</Text>
-            </TouchableOpacity>
-          </ImageBackground>
+          {/* BOX 4 - Leaderboard */}
+          <TouchableOpacity onPress={() => router.push('/(tabs)/leaderboard')} activeOpacity={0.8}>
+            <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
+              <Text style={styles.names}>Leaderboard</Text>
+              <View style={styles.nextPage}>
+                <Text style={styles.nextPageText}>Go to next page</Text>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </ImageBackground>
@@ -96,15 +87,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
     paddingVertical: 40,
-    paddingTop: Math.max(60, height * 0.08),
+    paddingTop: Math.max(20, height * 0.03),
     paddingBottom: 40,
-  },
-
-  title: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: Math.min(45, width * 0.12),
-    marginBottom: Math.max(20, height * 0.03),
   },
 
   box: {

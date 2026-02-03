@@ -2,9 +2,9 @@ import { Image, Text, View, StyleSheet, TouchableOpacity } from "react-native"
 import colors from './../constants/colors'
 import { useRouter } from "expo-router"
 
-const router = useRouter()
-
 export default function Index() {
+  const router = useRouter()
+  
   return (
     <View style={styles.mainContainer}>
 
