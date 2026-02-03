@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, Text, ImageBackground, Dimensions, ScrollView } from 'react-native';
+import { StyleSheet, View, Text, ImageBackground, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import home_background from '../../assets/images/home_background.jpg';
 import map from '../../assets/images/map.jpg';
 import grass from '../../assets/images/grass.jpg';
@@ -8,13 +9,15 @@ import sky from '../../assets/images/sky.jpg';
 const { width, height } = Dimensions.get('window');
 
 export default function Home() {
+  const router = useRouter();
+
   return (
-    <ImageBackground 
-      source={home_background} 
+    <ImageBackground
+      source={home_background}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -24,33 +27,49 @@ export default function Home() {
           {/* BOX 1 */}
           <ImageBackground source={map} style={styles.box} imageStyle={styles.boxImage}>
             <Text style={styles.names}>Map</Text>
-            <View style={styles.nextPage}>
+            <TouchableOpacity
+              style={styles.nextPage}
+              onPress={() => router.push('/(tabs)/map')}
+              activeOpacity={0.7}
+            >
               <Text style={styles.nextPageText}>Go to next page</Text>
-            </View>
+            </TouchableOpacity>
           </ImageBackground>
 
           {/* BOX 2 */}
           <ImageBackground source={sky} style={styles.box} imageStyle={styles.boxImage}>
             <Text style={styles.names}>Contests / Scholarships</Text>
-            <View style={styles.nextPage}>
+            <TouchableOpacity
+              style={styles.nextPage}
+              onPress={() => router.push('/(tabs)/contests')}
+              activeOpacity={0.7}
+            >
               <Text style={styles.nextPageText}>Go to next page</Text>
-            </View>
+            </TouchableOpacity>
           </ImageBackground>
 
           {/* BOX 3 */}
           <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
             <Text style={styles.names}>Quiz</Text>
-            <View style={styles.nextPage}>
+            <TouchableOpacity
+              style={styles.nextPage}
+              onPress={() => router.push('/(tabs)/quiz')}
+              activeOpacity={0.7}
+            >
               <Text style={styles.nextPageText}>Go to next page</Text>
-            </View>
+            </TouchableOpacity>
           </ImageBackground>
 
           {/* BOX 4 */}
           <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
             <Text style={styles.names}>Leaderboard</Text>
-            <View style={styles.nextPage}>
+            <TouchableOpacity
+              style={styles.nextPage}
+              onPress={() => router.push('/(tabs)/leaderboard')}
+              activeOpacity={0.7}
+            >
               <Text style={styles.nextPageText}>Go to next page</Text>
-            </View>
+            </TouchableOpacity>
           </ImageBackground>
         </View>
       </ScrollView>
@@ -96,7 +115,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: Math.max(15, height * 0.02),
-    borderWidth: 2,        
+    borderWidth: 2,
     borderColor: 'rgba(0, 0, 0, 0.3)',
   },
 
