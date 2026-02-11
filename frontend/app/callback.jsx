@@ -85,15 +85,18 @@ export default function AuthCallback() {
               picture: userInfo.picture,
             }));
 
+            // Trigger custom event to notify AuthContext of changes
+            window.dispatchEvent(new Event('auth-changed'));
+
             // Clean up
             sessionStorage.removeItem('auth0_state');
             
             setStatus('Sign in successful! Redirecting...');
             
-            // Small delay to show success message
+            // Small delay to show success message and allow state to update
             setTimeout(() => {
               router.replace('/(tabs)/home');
-            }, 500);
+            }, 800);
           } catch (decodeError) {
             console.error('Error decoding token:', decodeError);
             setStatus('Error processing user information');

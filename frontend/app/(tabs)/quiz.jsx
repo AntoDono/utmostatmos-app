@@ -82,7 +82,7 @@ export default function Quiz() {
 
     const updatedAnswers = [...userAnswers, newAnswer];
     setUserAnswers(updatedAnswers);
-    
+
     // Update score if correct
     if (isCorrect) {
       setScore(score + 1);

@@ -13,17 +13,16 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <ImageBackground 
-      source={home_background} 
+    <ImageBackground
+      source={home_background}
       style={styles.backgroundImage}
       resizeMode="cover"
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.overlay}>
-
           {/* BOX 1 - Map */}
           <TouchableOpacity onPress={() => router.push('/(tabs)/map')} activeOpacity={0.8}>
             <ImageBackground source={map} style={styles.box} imageStyle={styles.boxImage}>
@@ -58,6 +57,16 @@ export default function Home() {
           <TouchableOpacity onPress={() => router.push('/(tabs)/leaderboard')} activeOpacity={0.8}>
             <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
               <Text style={styles.names}>Leaderboard</Text>
+              <View style={styles.nextPage}>
+                <Text style={styles.nextPageText}>Go to next page</Text>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
+
+          {/* BOX 5 - Admin Dashboard */}
+          <TouchableOpacity onPress={() => router.push('/(tabs)/admin')} activeOpacity={0.8}>
+            <ImageBackground source={sky} style={styles.box} imageStyle={styles.boxImage}>
+              <Text style={styles.names}>Admin Dashboard</Text>
               <View style={styles.nextPage}>
                 <Text style={styles.nextPageText}>Go to next page</Text>
               </View>
@@ -100,7 +109,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: Math.max(15, height * 0.02),
-    borderWidth: 2,        
+    borderWidth: 2,
     borderColor: 'rgba(0, 0, 0, 0.3)',
   },
 

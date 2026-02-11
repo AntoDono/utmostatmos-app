@@ -8,7 +8,7 @@ const router = express.Router();
 router.get('/', async (req: Request, res: Response) => {
     try {
         const type = req.query.type as string | undefined;
-        
+
         let trackers;
         if (type) {
             trackers = await getTrackersByType(type);

@@ -1,23 +1,53 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, ActivityIndicator } from 'react-native';
 import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useRouter, usePathname } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import colors from '../../constants/colors';
 import { useAuth } from '../../context/AuthContext';
+import { authAPI } from '../../utils/api';
 
 export default function CustomDrawerContent(props) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout, login, isAuthenticated, isLoggingOut, isLoggingIn } = useAuth();
+  const { user, logout, login, isAuthenticated, isAnonymous, isLoggingOut, isLoggingIn, getAccessToken } = useAuth();
+  const [userRole, setUserRole] = useState(null);
 
-  const menuItems = [
+  // Fetch user role when authenticated (only for real users, not anonymous)
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (isAuthenticated && !isAnonymous) {
+        try {
+          const token = await getAccessToken();
+          const response = await authAPI.getProfile(token);
+          setUserRole(response.user?.role);
+        } catch (error) {
+          console.error('Error fetching user role:', error);
+        }
+      } else {
+        setUserRole(null);
+      }
+    };
+    
+    fetchUserRole();
+  }, [isAuthenticated, isAnonymous]);
+
+  const allMenuItems = [
     { name: 'Home', route: '/home', icon: 'home', iconOutline: 'home-outline' },
     { name: 'Contests', route: '/contests', icon: 'school', iconOutline: 'school-outline' },
     { name: 'Quiz', route: '/quiz', icon: 'game-controller', iconOutline: 'game-controller-outline' },
     { name: 'Map', route: '/map', icon: 'map', iconOutline: 'map-outline' },
     { name: 'Leaderboard', route: '/leaderboard', icon: 'podium', iconOutline: 'podium-outline' },
+    { name: 'Admin', route: '/admin', icon: 'settings', iconOutline: 'settings-outline', adminOnly: true },
   ];
+
+  // Filter menu items based on user role
+  const menuItems = allMenuItems.filter(item => {
+    if (item.adminOnly) {
+      return userRole === 'admin';
+    }
+    return true;
+  });
 
   const handleNavigation = (route) => {
     router.push(route);
@@ -26,7 +56,7 @@ export default function CustomDrawerContent(props) {
 
   const handleLogin = async () => {
     try {
-      await login();
+      router.push('/');
       props.navigation.closeDrawer();
     } catch (error) {
       console.error('Login error:', error);
@@ -37,12 +67,15 @@ export default function CustomDrawerContent(props) {
   const handleLogout = async () => {
     try {
       await logout();
-      // Always close drawer after logout (even if user cancelled Auth0 logout)
+      // Close drawer
       props.navigation.closeDrawer();
+      // Redirect to root page
+      router.replace('/');
     } catch (error) {
       console.error('Logout error:', error);
-      // Still close drawer
+      // Still close drawer and redirect
       props.navigation.closeDrawer();
+      router.replace('/');
     }
   };
 
@@ -52,13 +85,13 @@ export default function CustomDrawerContent(props) {
         {/* User Info Section */}
         <View style={styles.userSection}>
           <View style={styles.userIconContainer}>
-            <Ionicons 
-              name={isAuthenticated ? "person-circle" : "person-circle-outline"} 
-              size={60} 
-              color={isAuthenticated ? colors.LIGHTGREEN : colors.GREY} 
+            <Ionicons
+              name={isAuthenticated ? "person-circle" : "person-circle-outline"}
+              size={60}
+              color={isAuthenticated ? colors.LIGHTGREEN : colors.GREY}
             />
           </View>
-          {isAuthenticated ? (
+          {isAuthenticated && !isAnonymous ? (
             <>
               <Text style={styles.userName}>{user?.name || 'User'}</Text>
               <Text style={styles.userEmail}>{user?.email || ''}</Text>
@@ -68,7 +101,7 @@ export default function CustomDrawerContent(props) {
               <Text style={styles.userName}>Guest User</Text>
               <View style={styles.guestBadge}>
                 <Ionicons name="eye-off-outline" size={14} color={colors.GREY} />
-                <Text style={styles.guestBadgeText}>Not logged in</Text>
+                <Text style={styles.guestBadgeText}>{isAnonymous ? 'Anonymous mode' : 'Not logged in'}</Text>
               </View>
             </>
           )}
@@ -101,8 +134,8 @@ export default function CustomDrawerContent(props) {
       {/* Login/Logout Button */}
       <View style={styles.footer}>
         {isAuthenticated ? (
-          <TouchableOpacity 
-            style={[styles.logoutButton, isLoggingOut && styles.buttonDisabled]} 
+          <TouchableOpacity
+            style={[styles.logoutButton, isLoggingOut && styles.buttonDisabled]}
             onPress={handleLogout}
             disabled={isLoggingOut}
           >
@@ -116,8 +149,8 @@ export default function CustomDrawerContent(props) {
             </Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity 
-            style={[styles.loginButton, isLoggingIn && styles.buttonDisabled]} 
+          <TouchableOpacity
+            style={[styles.loginButton, isLoggingIn && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={isLoggingIn}
           >

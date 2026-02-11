@@ -3,6 +3,7 @@ import { Drawer } from 'expo-router/drawer'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import CustomDrawerContent from '../../components/Navigation/CustomDrawerContent'
 import CustomHeader from '../../components/Navigation/CustomHeader'
+import { CustomAlert } from '../../components/Alert'
 import colors from '../../constants/colors'
 
 export default function DrawerLayout() {
@@ -10,6 +11,7 @@ export default function DrawerLayout() {
         // Handle special cases
         if (name === 'contests') return 'Contests';
         if (name === 'leaderboard') return 'Leaderboard';
+        if (name === 'admin') return 'Admin Dashboard';
         return name.charAt(0).toUpperCase() + name.slice(1);
     };
 
@@ -61,7 +63,15 @@ export default function DrawerLayout() {
                         title: 'Leaderboard',
                     }}
                 />
+                <Drawer.Screen
+                    name="admin"
+                    options={{
+                        drawerLabel: 'Admin',
+                        title: 'Admin Dashboard',
+                    }}
+                />
             </Drawer>
+            <CustomAlert />
         </GestureHandlerRootView>
     )
 }

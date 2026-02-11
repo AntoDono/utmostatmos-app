@@ -1,6 +1,7 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, LayoutAnimation, Platform, UIManager } from 'react-native'
-import React, { useState, useRef } from 'react'
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, LayoutAnimation, Platform, UIManager, ActivityIndicator } from 'react-native'
+import React, { useState, useRef, useEffect } from 'react'
 import colors from '../../constants/colors'
+import { contestAPI } from '../../utils/api'
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -103,54 +104,36 @@ const AccordionCard = ({ scholarship, isExpanded, onToggle }) => {
 
 export default function Contests() {
     const [expandedIds, setExpandedIds] = useState({});
+    const [contests, setContests] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const scholarships = [
-        {
-            id: 'scholarship-1',
-            title: 'Youth Environmental Leaders Scholarship',
-            organization: 'Utmost Atmos',
-            scope: 'National',
-            grade: '9-12',
-            deadline: 'March 15, 2026',
-            prize: '$5,000 scholarship',
-            description: 'A scholarship program that lets students apply their knowledge and compete for first place. Winners will be selected based on their commitment to environmental sustainability and leadership potential.',
-            requirements: [
-                'Essay on environmental impact (500-1000 words)',
-                'Two letters of recommendation',
-                'Proof of enrollment in high school'
-            ]
-        },
-        {
-            id: 'scholarship-2',
-            title: 'Environmental Innovation Contest',
-            organization: 'Utmost Atmos',
-            scope: 'Regional',
-            grade: '6-12',
-            deadline: 'April 30, 2026',
-            prize: '$2,500 scholarship',
-            description: 'A contest encouraging students to develop innovative solutions for local environmental challenges. Submit your project proposal and compete for recognition and funding.',
-            requirements: [
-                'Project proposal document',
-                'Short video presentation (3-5 minutes)',
-                'Budget outline for implementation'
-            ]
-        },
-        {
-            id: 'scholarship-3',
-            title: 'Green Campus Initiative Award',
-            organization: 'Utmost Atmos',
-            scope: 'National',
-            grade: '9-12',
-            deadline: 'May 20, 2026',
-            prize: '$3,000 scholarship',
-            description: 'Recognizing students who have made significant contributions to environmental sustainability on their school campus through leadership and action.',
-            requirements: [
-                'Documentation of campus initiatives',
-                'Letter from school administrator',
-                'Impact assessment report'
-            ]
+    useEffect(() => {
+        loadContests();
+    }, []);
+
+    const loadContests = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await contestAPI.getContests();
+            
+            // Parse requirements from JSON string to array
+            const parsedContests = response.contests.map(contest => ({
+                ...contest,
+                requirements: typeof contest.requirements === 'string' 
+                    ? JSON.parse(contest.requirements) 
+                    : contest.requirements
+            }));
+            
+            setContests(parsedContests);
+        } catch (err) {
+            console.error('Error loading contests:', err);
+            setError(err.message || 'Failed to load contests');
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
 
     const toggleExpand = (id) => {
         setExpandedIds(prev => ({
@@ -168,17 +151,35 @@ export default function Contests() {
             </View>
 
             {/* Content with Cards */}
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-                {scholarships.map((scholarship) => (
-                    <AccordionCard
-                        key={scholarship.id}
-                        scholarship={scholarship}
-                        isExpanded={expandedIds[scholarship.id] || false}
-                        onToggle={() => toggleExpand(scholarship.id)}
-                    />
-                ))}
-                <View style={styles.bottomPadding} />
-            </ScrollView>
+            {loading ? (
+                <View style={styles.centerContainer}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={styles.loadingText}>Loading contests...</Text>
+                </View>
+            ) : error ? (
+                <View style={styles.centerContainer}>
+                    <Text style={styles.errorText}>Failed to load contests</Text>
+                    <TouchableOpacity style={styles.retryButton} onPress={loadContests}>
+                        <Text style={styles.retryButtonText}>Retry</Text>
+                    </TouchableOpacity>
+                </View>
+            ) : contests.length === 0 ? (
+                <View style={styles.centerContainer}>
+                    <Text style={styles.emptyText}>No contests available</Text>
+                </View>
+            ) : (
+                <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                    {contests.map((contest) => (
+                        <AccordionCard
+                            key={contest.id}
+                            scholarship={contest}
+                            isExpanded={expandedIds[contest.id] || false}
+                            onToggle={() => toggleExpand(contest.id)}
+                        />
+                    ))}
+                    <View style={styles.bottomPadding} />
+                </ScrollView>
+            )}
         </View>
     )
 }
@@ -355,5 +356,38 @@ const styles = StyleSheet.create({
         color: colors.textSecondary,
         flex: 1,
         lineHeight: 20,
+    },
+    centerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    loadingText: {
+        marginTop: 10,
+        fontSize: 14,
+        color: colors.textSecondary,
+    },
+    errorText: {
+        fontSize: 16,
+        color: colors.error,
+        marginBottom: 16,
+        textAlign: 'center',
+    },
+    emptyText: {
+        fontSize: 16,
+        color: colors.textSecondary,
+        textAlign: 'center',
+    },
+    retryButton: {
+        backgroundColor: colors.primary,
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 8,
+    },
+    retryButtonText: {
+        color: colors.textOnPrimary,
+        fontSize: 16,
+        fontWeight: '600',
     },
 })
