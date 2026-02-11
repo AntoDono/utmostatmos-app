@@ -1,7 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth0, Auth0Provider } from 'react-native-auth0';
 import { Platform } from 'react-native';
-import { AUTH0_DOMAIN, AUTH0_CLIENT_ID, getAuth0RedirectUrl } from '../constants/config';
+import * as WebBrowser from 'expo-web-browser';
+import { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_AUDIENCE, FRONTEND_URL, getAuth0RedirectUrl } from '../constants/config';
+
+// WebBrowser configuration for better UX
+WebBrowser.maybeCompleteAuthSession();
 
 // Create the auth context
 const AuthContext = createContext(null);
@@ -15,8 +19,126 @@ export const useAuth = () => {
   return context;
 };
 
-// Auth provider component that wraps the app
-const AuthProviderInner = ({ children }) => {
+// Web-specific auth implementation
+const WebAuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [accessToken, setAccessToken] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Check for stored token on mount
+  useEffect(() => {
+    const checkStoredAuth = async () => {
+      try {
+        const storedToken = localStorage.getItem('auth0_access_token');
+        const storedUser = localStorage.getItem('auth0_user');
+        
+        if (storedToken && storedUser) {
+          setAccessToken(storedToken);
+          setUser(JSON.parse(storedUser));
+        }
+      } catch (err) {
+        console.error('Error loading stored auth:', err);
+      }
+    };
+    
+    checkStoredAuth();
+  }, []);
+
+  const login = async () => {
+    if (isLoggingIn || isLoggingOut) {
+      console.log('Auth transaction already in progress');
+      return;
+    }
+
+    try {
+      setIsLoggingIn(true);
+      setError(null);
+
+      const redirectUri = `${FRONTEND_URL}/callback`;
+      const state = Math.random().toString(36).substring(7);
+      
+      // Store state for verification
+      sessionStorage.setItem('auth0_state', state);
+
+      // Build Auth0 authorization URL
+      const authUrl = `https://${AUTH0_DOMAIN}/authorize?` +
+        `response_type=token id_token&` +
+        `client_id=${AUTH0_CLIENT_ID}&` +
+        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+        `scope=openid profile email&` +
+        `audience=${encodeURIComponent(AUTH0_AUDIENCE)}&` +
+        `state=${state}&` +
+        `nonce=${Math.random().toString(36).substring(7)}`;
+
+      // Open Auth0 login in same window
+      window.location.href = authUrl;
+    } catch (err) {
+      console.error('Login error:', err);
+      setError(err);
+      setIsLoggingIn(false);
+      throw err;
+    }
+  };
+
+  const logout = async () => {
+    if (isLoggingOut || isLoggingIn) {
+      console.log('Auth transaction already in progress');
+      return;
+    }
+
+    try {
+      setIsLoggingOut(true);
+      
+      // Clear local state
+      setAccessToken(null);
+      setUser(null);
+      localStorage.removeItem('auth0_access_token');
+      localStorage.removeItem('auth0_user');
+      sessionStorage.removeItem('auth0_state');
+      
+      console.log('Local logout completed (web)');
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  const getAccessToken = async () => {
+    if (!user) {
+      throw new Error('User not logged in');
+    }
+    if (!accessToken) {
+      throw new Error('No access token available');
+    }
+    return accessToken;
+  };
+
+  const value = {
+    user,
+    isLoading,
+    isAuthenticated: !!user,
+    error,
+    accessToken,
+    login,
+    logout,
+    getAccessToken,
+    isLoggingOut,
+    isLoggingIn,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+// Native auth provider component (iOS/Android)
+const NativeAuthProvider = ({ children }) => {
   const {
     authorize,
     clearSession,
@@ -97,22 +219,25 @@ const AuthProviderInner = ({ children }) => {
       // Clear local token first
       setAccessToken(null);
       
-      // For iOS, do local logout to avoid the browser popup
-      if (Platform.OS === 'ios') {
+      // Platform-specific logout behavior
+      const platform = Platform.OS;
+      
+      // For iOS and Web, do local logout to avoid browser popup
+      if (platform === 'ios' || platform === 'web') {
         // Clear local credentials (removes user and tokens from device)
         await clearCredentials();
-        console.log('Local logout completed (iOS)');
+        console.log(`Local logout completed (${platform})`);
         return;
       }
       
-      // For Android/Web, do full Auth0 logout
-      const platform = Platform.OS;
+      // For Android, do full Auth0 logout with browser redirect
       const redirectUrl = getAuth0RedirectUrl(platform);
 
       // Try to clear Auth0 session
       await clearSession({
         ...(redirectUrl && { redirectUrl }), // Only include if defined
       });
+      console.log('Auth0 session cleared (Android)');
     } catch (err) {
       // User may have cancelled the logout - that's okay
       // Local session is already cleared above
@@ -170,13 +295,19 @@ const AuthProviderInner = ({ children }) => {
   );
 };
 
-// Main Auth provider that includes Auth0Provider
+// Main Auth provider that conditionally uses web or native auth
 export const AuthProvider = ({ children }) => {
+  // Use web-specific auth for web platform
+  if (Platform.OS === 'web') {
+    return <WebAuthProvider>{children}</WebAuthProvider>;
+  }
+  
+  // Use react-native-auth0 for iOS/Android
   return (
     <Auth0Provider domain={AUTH0_DOMAIN} clientId={AUTH0_CLIENT_ID}>
-      <AuthProviderInner>
+      <NativeAuthProvider>
         {children}
-      </AuthProviderInner>
+      </NativeAuthProvider>
     </Auth0Provider>
   );
 };

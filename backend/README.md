@@ -21,8 +21,12 @@ DATABASE_URL="file:./prisma/dev.db"
 
 # Auth0 Configuration (required for authentication)
 AUTH0_DOMAIN="your-tenant.auth0.com"
-AUTH0_AUDIENCE="https://api.utmostatmos.com"
+AUTH0_AUDIENCE="https://your-api-identifier.com"
 ```
+
+**Replace with your Auth0 values**:
+- `your-tenant.auth0.com` - Your Auth0 domain from Dashboard
+- `https://your-api-identifier.com` - Your Auth0 API identifier
 
 Then, set up Prisma by generating the client and running migrations:
 
@@ -41,15 +45,18 @@ This application uses Auth0 for authentication. You need to:
 1. Create an Auth0 account at https://auth0.com
 2. Create a new API in Auth0 Dashboard:
    - Go to Applications > APIs > Create API
-   - Set the Identifier to match your `AUTH0_AUDIENCE` (e.g., `https://api.utmostatmos.com`)
+   - Set the Identifier to match your `AUTH0_AUDIENCE` (e.g., `https://api.yourdomain.com`)
    - Select RS256 as the signing algorithm
-3. Create a Native Application for the mobile app:
+3. Create a Native Application for the mobile/web app:
    - Go to Applications > Applications > Create Application
    - Choose "Native" as the application type
    - Note the Domain and Client ID for the frontend configuration
 4. Configure callback URLs in the Native Application:
-   - Allowed Callback URLs: `com.utmostatmos.app://callback`
-   - Allowed Logout URLs: `com.utmostatmos.app://logout`
+   - Allowed Callback URLs: `org.utmostatmos.utmostatmos://YOUR_AUTH0_DOMAIN/ios/org.utmostatmos.utmostatmos/callback, org.utmostatmos.utmostatmos://YOUR_AUTH0_DOMAIN/android/org.utmostatmos.utmostatmos/callback, http://localhost:8081/callback`
+   - Allowed Logout URLs: `http://localhost:8081`
+   - Allowed Web Origins: `http://localhost:8081`
+   
+   **Replace `YOUR_AUTH0_DOMAIN`** with your actual Auth0 domain
 
 ## 3. Populating for Development
 
