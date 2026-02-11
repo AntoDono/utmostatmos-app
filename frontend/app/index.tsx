@@ -1,9 +1,27 @@
-import { Image, Text, View, StyleSheet, TouchableOpacity } from "react-native"
+import { Image, Text, View, StyleSheet, TouchableOpacity, Platform } from "react-native"
 import colors from './../constants/colors'
 import { useRouter } from "expo-router"
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 export default function Index() {
   const router = useRouter()
+  
+  const handleAnonymousLogin = async () => {
+    try {
+      // Set anonymous flag in storage
+      await AsyncStorage.setItem('isAnonymous', 'true')
+      
+      // For web only, trigger the auth-changed event
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('auth-changed'))
+      }
+      
+      // Navigate to home screen
+      router.replace('/(tabs)/home')
+    } catch (error) {
+      console.error('Error setting anonymous mode:', error)
+    }
+  }
   
   return (
     <View style={styles.mainContainer}>
@@ -25,6 +43,11 @@ export default function Index() {
         onPress={()=>router.push('/auth/signUp')}
       >
         <Text style={[styles.buttonText, {color: colors.GREY}]}>Register</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.button, {borderWidth: 1, borderColor: colors.GREY}, {backgroundColor: colors.WHITE}, styles.guestButton]}
+        onPress={handleAnonymousLogin}
+      >
+        <Text style={[styles.buttonText, {color: colors.GREY}]}>Continue as Guest</Text>
       </TouchableOpacity>
     </View>
   );
@@ -55,6 +78,9 @@ const styles = StyleSheet.create({
   },
   registerButton: {
     marginTop: 20,
+  },
+  guestButton: {
+    marginTop: 10,
   },
   buttonText: { 
     textAlign: 'center',

@@ -59,7 +59,7 @@ export default function SignIn() {
               onPress={handleLogin}
               disabled={isLoading}
             >
-              <Text style={authStyles.buttonText}>Login with Auth0</Text>
+              <Text style={authStyles.buttonText}>Login</Text>
             </TouchableOpacity>
 
             <View style={authStyles.linkContainer}>

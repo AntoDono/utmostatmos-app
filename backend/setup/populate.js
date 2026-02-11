@@ -10,6 +10,7 @@ async function populate() {
     // Clear existing data
     console.log('Clearing existing data...');
     await prisma.tracker.deleteMany();
+    await prisma.contest.deleteMany();
     await prisma.binQuiz.deleteMany();
     await prisma.user.deleteMany();
 
@@ -213,6 +214,152 @@ async function populate() {
     );
     console.log(`Created ${createdQuizzes.length} bin quizzes`);
 
+    // Create Contests
+    console.log('Creating contests...');
+    const contests = [
+      {
+        id: uuidv4(),
+        title: 'National STEM Video Game Challenge',
+        organization: 'Entertainment Software Association',
+        scope: 'National',
+        grade: '5-12',
+        deadline: 'March 20, 2026',
+        prize: '$5,000 + Mentorship',
+        description: 'Design, build, and showcase your own video game with a focus on STEM learning and environmental awareness. Games should incorporate elements of sustainability, climate science, or ecological conservation.',
+        requirements: JSON.stringify([
+          'Original game concept',
+          'Environmental or STEM theme',
+          'Working prototype or demo',
+          'Design document (5-10 pages)',
+          'Video presentation (3-5 minutes)'
+        ]),
+      },
+      {
+        id: uuidv4(),
+        title: 'Youth Climate Action Challenge',
+        organization: 'Climate Reality Project',
+        scope: 'International',
+        grade: '9-12',
+        deadline: 'April 15, 2026',
+        prize: '$10,000 + Summit Attendance',
+        description: 'Develop innovative solutions to address climate change in your community. Projects should demonstrate measurable environmental impact and community engagement.',
+        requirements: JSON.stringify([
+          'Detailed project proposal',
+          'Community impact assessment',
+          'Implementation timeline',
+          'Budget breakdown',
+          'Letter of support from local organization'
+        ]),
+      },
+      {
+        id: uuidv4(),
+        title: 'Eco-Innovation App Competition',
+        organization: 'Green Tech Foundation',
+        scope: 'National',
+        grade: '9-12',
+        deadline: 'May 1, 2026',
+        prize: '$7,500 + Internship Opportunity',
+        description: 'Create a mobile or web application that promotes sustainable living, waste reduction, or environmental education. Apps will be judged on innovation, usability, and potential impact.',
+        requirements: JSON.stringify([
+          'Functional app prototype',
+          'Technical documentation',
+          'User testing results',
+          'Marketing plan',
+          'Demo video (5 minutes)'
+        ]),
+      },
+      {
+        id: uuidv4(),
+        title: 'Congressional App Challenge',
+        organization: 'U.S. House of Representatives',
+        scope: 'Congressional District',
+        grade: '7-12',
+        deadline: 'November 1, 2026',
+        prize: 'Congressional Recognition + Tech Package',
+        description: 'Develop a mobile, web, or computer application to address a problem or issue in your community. Winners are invited to showcase their apps at the U.S. Capitol.',
+        requirements: JSON.stringify([
+          'Original source code',
+          'Working application',
+          'Project description',
+          'Video demo (up to 3 minutes)',
+          'Team photo (if applicable)'
+        ]),
+      },
+      {
+        id: uuidv4(),
+        title: 'Regeneron Science Talent Search',
+        organization: 'Society for Science',
+        scope: 'National',
+        grade: '12',
+        deadline: 'November 15, 2026',
+        prize: 'Up to $250,000 in Scholarships',
+        description: 'The nation\'s oldest and most prestigious science and math competition for high school seniors. Conduct independent research on environmental science, sustainability, or related fields.',
+        requirements: JSON.stringify([
+          'Original research project',
+          'Research report (20 pages max)',
+          'Online application',
+          'Educator recommendation',
+          'Transcripts'
+        ]),
+      },
+      {
+        id: uuidv4(),
+        title: 'Stockholm Junior Water Prize',
+        organization: 'Stockholm International Water Institute',
+        scope: 'International',
+        grade: '9-12',
+        deadline: 'March 31, 2026',
+        prize: '$15,000 + Trip to Stockholm',
+        description: 'Conduct research focused on water-related environmental issues, including water quality, conservation, treatment, or protection of water resources and the environment.',
+        requirements: JSON.stringify([
+          'Research paper (15 pages max)',
+          'Abstract (500 words)',
+          'Lab notebook or field notes',
+          'Teacher endorsement',
+          'Proof of age and enrollment'
+        ]),
+      },
+      {
+        id: uuidv4(),
+        title: 'Samsung Solve for Tomorrow',
+        organization: 'Samsung Electronics America',
+        scope: 'National',
+        grade: '6-12',
+        deadline: 'December 1, 2026',
+        prize: '$100,000 + Technology',
+        description: 'Use STEM skills to solve real-world problems in your community. Focus on environmental sustainability, waste reduction, or climate solutions.',
+        requirements: JSON.stringify([
+          'Problem statement',
+          'Solution proposal',
+          'STEM curriculum alignment',
+          'Video pitch (3 minutes)',
+          'Teacher sponsor'
+        ]),
+      },
+      {
+        id: uuidv4(),
+        title: 'Google Science Fair',
+        organization: 'Google',
+        scope: 'International',
+        grade: '7-12',
+        deadline: 'January 15, 2027',
+        prize: '$50,000 + Mentorship',
+        description: 'Online science and engineering competition. Projects related to environmental science, sustainability, and climate action are highly encouraged.',
+        requirements: JSON.stringify([
+          'Online project submission',
+          'Scientific research',
+          'Project presentation',
+          'Safety and ethics compliance',
+          'Parental consent (if under 18)'
+        ]),
+      },
+    ];
+
+    const createdContests = await Promise.all(
+      contests.map(contest => prisma.contest.create({ data: contest }))
+    );
+    console.log(`Created ${createdContests.length} contests`);
+
     // Create Trackers
     console.log('Creating trackers...');
     const trackers = [
@@ -297,6 +444,7 @@ async function populate() {
     console.log(`\nSummary:`);
     console.log(`- Users: ${createdUsers.length} (sample Auth0 users for testing)`);
     console.log(`- Bin Quizzes: ${createdQuizzes.length}`);
+    console.log(`- Contests: ${createdContests.length}`);
     console.log(`- Trackers: ${createdTrackers.length}`);
     console.log(`\nNote: Real users will be created automatically when they log in via Auth0.`);
 

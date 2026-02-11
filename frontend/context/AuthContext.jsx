@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth0, Auth0Provider } from 'react-native-auth0';
-import { Platform } from 'react-native';
+import { Platform, DeviceEventEmitter } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_AUDIENCE, FRONTEND_URL, getAuth0RedirectUrl } from '../constants/config';
 
 // WebBrowser configuration for better UX
@@ -27,24 +28,62 @@ const WebAuthProvider = ({ children }) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
+
+  // Function to check stored auth
+  const checkStoredAuth = () => {
+    try {
+      const storedToken = localStorage.getItem('auth0_access_token');
+      const storedUser = localStorage.getItem('auth0_user');
+      const anonFlag = localStorage.getItem('isAnonymous');
+      
+      if (anonFlag === 'true') {
+        setIsAnonymous(true);
+        setUser(null);
+        setAccessToken(null);
+      } else if (storedToken && storedUser) {
+        setAccessToken(storedToken);
+        setUser(JSON.parse(storedUser));
+        setIsAnonymous(false);
+      } else {
+        setUser(null);
+        setAccessToken(null);
+        setIsAnonymous(false);
+      }
+    } catch (err) {
+      console.error('Error loading stored auth:', err);
+    }
+  };
 
   // Check for stored token on mount
   useEffect(() => {
-    const checkStoredAuth = async () => {
-      try {
-        const storedToken = localStorage.getItem('auth0_access_token');
-        const storedUser = localStorage.getItem('auth0_user');
-        
-        if (storedToken && storedUser) {
-          setAccessToken(storedToken);
-          setUser(JSON.parse(storedUser));
-        }
-      } catch (err) {
-        console.error('Error loading stored auth:', err);
+    checkStoredAuth();
+  }, []);
+
+  // Listen for storage changes (when tokens are added/removed)
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      // Only react to auth-related storage changes
+      if (e.key === 'auth0_access_token' || e.key === 'auth0_user' || e.key === 'isAnonymous') {
+        console.log('Storage changed, reloading auth state');
+        checkStoredAuth();
       }
     };
-    
-    checkStoredAuth();
+
+    // Listen for storage events from other tabs/windows
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also create a custom event listener for same-window changes
+    const handleCustomAuthChange = () => {
+      console.log('Auth changed, reloading auth state');
+      checkStoredAuth();
+    };
+    window.addEventListener('auth-changed', handleCustomAuthChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('auth-changed', handleCustomAuthChange);
+    };
   }, []);
 
   const login = async () => {
@@ -95,9 +134,14 @@ const WebAuthProvider = ({ children }) => {
       // Clear local state
       setAccessToken(null);
       setUser(null);
+      setIsAnonymous(false);
       localStorage.removeItem('auth0_access_token');
       localStorage.removeItem('auth0_user');
+      localStorage.removeItem('isAnonymous');
       sessionStorage.removeItem('auth0_state');
+      
+      // Trigger custom event to notify about auth changes
+      window.dispatchEvent(new Event('auth-changed'));
       
       console.log('Local logout completed (web)');
     } catch (err) {
@@ -120,7 +164,8 @@ const WebAuthProvider = ({ children }) => {
   const value = {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user || isAnonymous,
+    isAnonymous,
     error,
     accessToken,
     login,
@@ -152,6 +197,29 @@ const NativeAuthProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
+
+  // Check for anonymous flag on mount and when auth state changes
+  useEffect(() => {
+    const checkAnonymous = async () => {
+      try {
+        const anonFlag = await AsyncStorage.getItem('isAnonymous');
+        setIsAnonymous(anonFlag === 'true');
+      } catch (err) {
+        console.error('Error checking anonymous flag:', err);
+      }
+    };
+    
+    // Initial check
+    checkAnonymous();
+    
+    // Listen for auth-changed events on mobile
+    const subscription = DeviceEventEmitter.addListener('auth-changed', checkAnonymous);
+    
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   // Fetch credentials when user changes
   useEffect(() => {
@@ -218,6 +286,11 @@ const NativeAuthProvider = ({ children }) => {
       
       // Clear local token first
       setAccessToken(null);
+      setIsAnonymous(false);
+      await AsyncStorage.removeItem('isAnonymous');
+      
+      // Emit auth-changed event for mobile
+      DeviceEventEmitter.emit('auth-changed');
       
       // Platform-specific logout behavior
       const platform = Platform.OS;
@@ -278,7 +351,8 @@ const NativeAuthProvider = ({ children }) => {
   const value = {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user || isAnonymous,
+    isAnonymous,
     error,
     accessToken,
     login,
