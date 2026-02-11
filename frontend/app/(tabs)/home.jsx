@@ -62,6 +62,16 @@ export default function Home() {
               </View>
             </ImageBackground>
           </TouchableOpacity>
+
+          {/* BOX 5 - Admin Dashboard */}
+          <TouchableOpacity onPress={() => router.push('/(tabs)/admin')} activeOpacity={0.8}>
+            <ImageBackground source={sky} style={styles.box} imageStyle={styles.boxImage}>
+              <Text style={styles.names}>Admin Dashboard</Text>
+              <View style={styles.nextPage}>
+                <Text style={styles.nextPageText}>Go to next page</Text>
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </ImageBackground>

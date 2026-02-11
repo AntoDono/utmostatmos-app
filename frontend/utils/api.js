@@ -4,7 +4,7 @@ import { API_URL } from '../constants/config';
 // Pass accessToken for authenticated requests
 const apiRequest = async (endpoint, options = {}, accessToken = null) => {
   const method = options.method || 'GET';
-  
+
   const defaultHeaders = {
     'Content-Type': 'application/json',
   };
@@ -25,8 +25,8 @@ const apiRequest = async (endpoint, options = {}, accessToken = null) => {
 
   // Only add body for POST, PUT, DELETE requests
   if (method !== 'GET' && options.body) {
-    config.body = typeof options.body === 'string' 
-      ? options.body 
+    config.body = typeof options.body === 'string'
+      ? options.body
       : JSON.stringify(options.body);
   }
 
@@ -85,6 +85,39 @@ export const quizAPI = {
       body: { points },
     }, accessToken);
   },
+
+  // Admin endpoints (require auth)
+  async getAllQuizzes(accessToken) {
+    return apiRequest('/quiz/admin', {
+      method: 'GET',
+    }, accessToken);
+  },
+
+  async getQuiz(accessToken, id) {
+    return apiRequest(`/quiz/admin/${id}`, {
+      method: 'GET',
+    }, accessToken);
+  },
+
+  async createQuiz(accessToken, { item, choices, answer }) {
+    return apiRequest('/quiz/admin', {
+      method: 'POST',
+      body: { item, choices, answer },
+    }, accessToken);
+  },
+
+  async updateQuiz(accessToken, id, { item, choices, answer }) {
+    return apiRequest(`/quiz/admin/${id}`, {
+      method: 'PUT',
+      body: { item, choices, answer },
+    }, accessToken);
+  },
+
+  async deleteQuiz(accessToken, id) {
+    return apiRequest(`/quiz/admin/${id}`, {
+      method: 'DELETE',
+    }, accessToken);
+  },
 };
 
 // Leaderboard API
@@ -135,6 +168,46 @@ export const trackerAPI = {
     return apiRequest(`/tracker/${id}`, {
       method: 'DELETE',
     }, accessToken);
+  },
+};
+
+// Contest API
+export const contestAPI = {
+  // Get all contests (public endpoint)
+  async getContests() {
+    return apiRequest('/contest', {
+      method: 'GET',
+    });
+  },
+
+  // Get contest by ID (public endpoint)
+  async getContest(id) {
+    return apiRequest(`/contest/${id}`, {
+      method: 'GET',
+    });
+  },
+
+  // Create contest
+  async createContest({ title, organization, scope, grade, deadline, prize, description, requirements }) {
+    return apiRequest('/contest', {
+      method: 'POST',
+      body: { title, organization, scope, grade, deadline, prize, description, requirements },
+    });
+  },
+
+  // Update contest
+  async updateContest(id, { title, organization, scope, grade, deadline, prize, description, requirements }) {
+    return apiRequest(`/contest/${id}`, {
+      method: 'PUT',
+      body: { title, organization, scope, grade, deadline, prize, description, requirements },
+    });
+  },
+
+  // Delete contest
+  async deleteContest(id) {
+    return apiRequest(`/contest/${id}`, {
+      method: 'DELETE',
+    });
   },
 };
 

@@ -17,6 +17,7 @@ export default function CustomDrawerContent(props) {
     { name: 'Quiz', route: '/quiz', icon: 'game-controller', iconOutline: 'game-controller-outline' },
     { name: 'Map', route: '/map', icon: 'map', iconOutline: 'map-outline' },
     { name: 'Leaderboard', route: '/leaderboard', icon: 'podium', iconOutline: 'podium-outline' },
+    { name: 'Admin', route: '/admin', icon: 'settings', iconOutline: 'settings-outline' },
   ];
 
   const handleNavigation = (route) => {
@@ -52,10 +53,10 @@ export default function CustomDrawerContent(props) {
         {/* User Info Section */}
         <View style={styles.userSection}>
           <View style={styles.userIconContainer}>
-            <Ionicons 
-              name={isAuthenticated ? "person-circle" : "person-circle-outline"} 
-              size={60} 
-              color={isAuthenticated ? colors.LIGHTGREEN : colors.GREY} 
+            <Ionicons
+              name={isAuthenticated ? "person-circle" : "person-circle-outline"}
+              size={60}
+              color={isAuthenticated ? colors.LIGHTGREEN : colors.GREY}
             />
           </View>
           {isAuthenticated ? (
@@ -101,8 +102,8 @@ export default function CustomDrawerContent(props) {
       {/* Login/Logout Button */}
       <View style={styles.footer}>
         {isAuthenticated ? (
-          <TouchableOpacity 
-            style={[styles.logoutButton, isLoggingOut && styles.buttonDisabled]} 
+          <TouchableOpacity
+            style={[styles.logoutButton, isLoggingOut && styles.buttonDisabled]}
             onPress={handleLogout}
             disabled={isLoggingOut}
           >
@@ -116,8 +117,8 @@ export default function CustomDrawerContent(props) {
             </Text>
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity 
-            style={[styles.loginButton, isLoggingIn && styles.buttonDisabled]} 
+          <TouchableOpacity
+            style={[styles.loginButton, isLoggingIn && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={isLoggingIn}
           >

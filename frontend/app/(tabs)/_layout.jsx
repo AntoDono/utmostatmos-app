@@ -10,6 +10,7 @@ export default function DrawerLayout() {
         // Handle special cases
         if (name === 'contests') return 'Contests';
         if (name === 'leaderboard') return 'Leaderboard';
+        if (name === 'admin') return 'Admin Dashboard';
         return name.charAt(0).toUpperCase() + name.slice(1);
     };
 
@@ -59,6 +60,13 @@ export default function DrawerLayout() {
                     options={{
                         drawerLabel: 'Leaderboard',
                         title: 'Leaderboard',
+                    }}
+                />
+                <Drawer.Screen
+                    name="admin"
+                    options={{
+                        drawerLabel: 'Admin',
+                        title: 'Admin Dashboard',
                     }}
                 />
             </Drawer>

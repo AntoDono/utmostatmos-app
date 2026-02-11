@@ -41,3 +41,17 @@ model Tracker {
   updatedAt DateTime @updatedAt
 }
 
+model Contest {
+  id           String   @id @default(uuid())
+  title        String
+  organization String
+  scope        String
+  grade        String
+  deadline     String
+  prize        String
+  description  String
+  requirements String   // JSON array stored as string: ["req1", "req2", ...]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
