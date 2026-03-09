@@ -3,22 +3,20 @@ import React from 'react';
 import colors from '../../constants/colors';
 import BinOption from './BinOption';
 
-const QuizQuestion = ({ 
-  quiz, 
-  currentIndex, 
-  totalQuestions, 
-  score, 
-  bins, 
-  answered, 
-  onAnswer, 
-  onSkip, 
+const QuizQuestion = ({
+  quiz,
+  currentIndex,
+  totalQuestions,
+  score,
+  bins,
+  answered,
+  onAnswer,
+  onSkip,
   onRestart,
   isGuest = false
 }) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* Header */}
-      <Text style={styles.title}>School Supplies Game</Text>
 
       {/* Guest Warning Banner */}
       {isGuest && (
@@ -58,17 +56,16 @@ const QuizQuestion = ({
         ))}
       </View>
 
-      {/* Skip Button */}
+      {/* Next / Skip Button - enabled when answered so user can advance immediately */}
       <Pressable
         style={({ pressed }) => [
           styles.skipButton,
           pressed && styles.buttonPressed
         ]}
         onPress={onSkip}
-        disabled={answered}
       >
-        <Text style={[styles.skipButtonText, answered && styles.disabledText]}>
-          Next Question
+        <Text style={styles.skipButtonText}>
+          {answered ? 'Next Question' : 'Skip'}
         </Text>
       </Pressable>
 

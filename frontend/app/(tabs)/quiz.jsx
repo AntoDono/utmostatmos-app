@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Alert } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { quizAPI } from '../../utils/api';
 import { transformQuizzes, getBinsForQuiz } from '../../utils/quizHelpers';
@@ -8,7 +7,7 @@ import QuizResults from '../../components/Quiz/QuizResults';
 import { LoadingState, ErrorState, EmptyState } from '../../components/Quiz/LoadingState';
 
 export default function Quiz() {
-  const { getAccessToken, isAuthenticated, login } = useAuth();
+  const { getAccessToken, isAuthenticated } = useAuth();
   const [currentQuizIndex, setCurrentQuizIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [answered, setAnswered] = useState(false);
@@ -28,7 +27,7 @@ export default function Quiz() {
       setLoading(true);
       setError(null);
       const response = await quizAPI.getQuizzes(10);
-      
+
       if (response.quizzes && response.quizzes.length > 0) {
         setQuizzes(transformQuizzes(response.quizzes));
       } else {
@@ -44,28 +43,6 @@ export default function Quiz() {
 
   const handleAnswer = async (selectedBin) => {
     if (answered) return; // Prevent multiple answers
-
-    // Check if user is authenticated before allowing answer
-    if (!isAuthenticated) {
-      Alert.alert(
-        'Login Required',
-        'Please login to submit quiz answers and track your score.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { 
-            text: 'Login', 
-            onPress: async () => {
-              try {
-                await login();
-              } catch (error) {
-                console.error('Login error:', error);
-              }
-            }
-          }
-        ]
-      );
-      return;
-    }
 
     const currentQuiz = quizzes[currentQuizIndex];
     const isCorrect = selectedBin.toLowerCase() === currentQuiz.answer.toLowerCase();
@@ -86,27 +63,18 @@ export default function Quiz() {
     // Update score if correct
     if (isCorrect) {
       setScore(score + 1);
-      
-      // Submit score to backend only if user is authenticated
-      const accessToken = await getAccessToken();
-      await quizAPI.submitAnswer(accessToken, 10); // 10 points per correct answer
-    }
 
-    // Auto-advance after 1 second
-    setTimeout(() => {
-      if (currentQuizIndex === quizzes.length - 1) {
-        // Last question - go to results
-        setShowResults(true);
-      } else {
-        // Not last question - move to next
-        moveToNext();
+      // Submit score to backend only if user is authenticated (don't block advancement on failure)
+      if (isAuthenticated) {
+        try {
+          const accessToken = await getAccessToken();
+          await quizAPI.submitAnswer(accessToken, 10); // 10 points per correct answer
+        } catch (err) {
+          console.error('Failed to submit answer:', err);
+        }
       }
-    }, 1000);
-  };
-
-  const moveToNext = () => {
-    setCurrentQuizIndex(currentQuizIndex + 1);
-    setAnswered(false);
+    }
+    // No auto-advance — user presses "Next Question" to continue
   };
 
   const resetQuiz = () => {

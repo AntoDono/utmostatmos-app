@@ -3,12 +3,13 @@ import React, { useState, useEffect } from 'react'
 import { leaderboardAPI } from '../../utils/api'
 import { Alert } from '../../components/Alert'
 import colors from '../../constants/colors'
+import { useAuth } from '../../context/AuthContext'
 
 const TROPHIES = ['🥇', '🥈', '🥉'];
 
-const PodiumPlace = ({ user, place, height }) => {
+const PodiumPlace = ({ user, place, height, isCurrentUser }) => {
   if (!user) return null;
-  
+
   const podiumColors = {
     1: '#FFD700', // Gold
     2: '#C0C0C0', // Silver
@@ -16,11 +17,18 @@ const PodiumPlace = ({ user, place, height }) => {
   };
 
   return (
-    <View style={[styles.podiumPlace, { order: place === 1 ? 0 : place === 2 ? -1 : 1 }]}>
+    <View
+      style={[
+        styles.podiumPlace,
+        { order: place === 1 ? 0 : place === 2 ? -1 : 1 },
+        isCurrentUser && styles.currentUserHighlight,
+      ]}
+    >
       <Text style={styles.podiumTrophy}>{TROPHIES[place - 1]}</Text>
       <View style={styles.podiumUserInfo}>
         <Text style={styles.podiumName} numberOfLines={1}>
-          {user.firstName}
+          {user.firstName} {user.lastName}
+          {isCurrentUser ? ' (You)' : ''}
         </Text>
         <Text style={styles.podiumScore}>{user.leaderboardScore} pts</Text>
       </View>
@@ -34,6 +42,19 @@ const PodiumPlace = ({ user, place, height }) => {
 export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [myRank, setMyRank] = useState(null);
+  const [myScore, setMyScore] = useState(null);
+  const { user: authUser, accessToken } = useAuth();
+
+  const currentAuth0Id = authUser?.sub || authUser?.user_id || null;
+  const currentEmail = authUser?.email || null;
+
+  const isCurrentUser = (entry) => {
+    if (!entry) return false;
+    if (currentAuth0Id && entry.auth0Id === currentAuth0Id) return true;
+    if (currentEmail && entry.email === currentEmail) return true;
+    return false;
+  };
 
   useEffect(() => {
     loadLeaderboard();
@@ -42,11 +63,21 @@ export default function Leaderboard() {
   const loadLeaderboard = async () => {
     try {
       setLoading(true);
-      const response = await leaderboardAPI.getLeaderboard();
+      const response = await leaderboardAPI.getLeaderboard(accessToken);
       if (!response.leaderboard) {
         throw new Error('Invalid response: missing leaderboard data');
       }
       setLeaderboard(response.leaderboard);
+      if (response.currentUserRank != null) {
+        setMyRank(response.currentUserRank);
+      } else {
+        setMyRank(null);
+      }
+      if (response.currentUser?.leaderboardScore != null) {
+        setMyScore(response.currentUser.leaderboardScore);
+      } else {
+        setMyScore(null);
+      }
     } catch (error) {
       Alert.alert('Error', error.message);
       throw error;
@@ -69,20 +100,43 @@ export default function Leaderboard() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Leaderboard</Text>
       {leaderboard.length === 0 ? (
         <Text style={styles.emptyText}>No leaderboard data available</Text>
       ) : (
         <ScrollView showsVerticalScrollIndicator={false}>
+          {myRank != null && (
+            <View style={styles.myRankCard}>
+              <Text style={styles.myRankTitle}>Your rank</Text>
+              <Text style={styles.myRankValue}>#{myRank}</Text>
+              {myScore != null && (
+                <Text style={styles.myRankScore}>{myScore} pts</Text>
+              )}
+            </View>
+          )}
           {/* Podium Section */}
           <View style={styles.podiumContainer}>
             <View style={styles.podiumWrapper}>
               {/* 2nd Place - Left */}
-              <PodiumPlace user={topThree[1]} place={2} height={100} />
+              <PodiumPlace
+                user={topThree[1]}
+                place={2}
+                height={100}
+                isCurrentUser={isCurrentUser(topThree[1])}
+              />
               {/* 1st Place - Center */}
-              <PodiumPlace user={topThree[0]} place={1} height={130} />
+              <PodiumPlace
+                user={topThree[0]}
+                place={1}
+                height={130}
+                isCurrentUser={isCurrentUser(topThree[0])}
+              />
               {/* 3rd Place - Right */}
-              <PodiumPlace user={topThree[2]} place={3} height={80} />
+              <PodiumPlace
+                user={topThree[2]}
+                place={3}
+                height={80}
+                isCurrentUser={isCurrentUser(topThree[2])}
+              />
             </View>
           </View>
 
@@ -91,15 +145,21 @@ export default function Leaderboard() {
             <View style={styles.listContainer}>
               <Text style={styles.listTitle}>Rankings</Text>
               {restOfLeaderboard.map((item, index) => (
-                <View key={item.id} style={styles.leaderboardItem}>
+                <View
+                  key={item.id}
+                  style={[
+                    styles.leaderboardItem,
+                    isCurrentUser(item) && styles.currentUserHighlight,
+                  ]}
+                >
                   <View style={styles.rankBadge}>
                     <Text style={styles.rank}>{index + 4}</Text>
                   </View>
                   <View style={styles.userInfo}>
                     <Text style={styles.userName}>
                       {item.firstName} {item.lastName}
+                      {isCurrentUser(item) ? ' (You)' : ''}
                     </Text>
-                    <Text style={styles.userEmail}>{item.email}</Text>
                   </View>
                   <Text style={styles.score}>{item.leaderboardScore} pts</Text>
                 </View>
@@ -199,6 +259,31 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: 15,
   },
+  myRankCard: {
+    marginBottom: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.primaryMuted,
+    alignItems: 'center',
+  },
+  myRankTitle: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  myRankValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.primaryDark,
+  },
+  myRankScore: {
+    marginTop: 2,
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
   leaderboardItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -213,6 +298,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 4,
     elevation: 2,
+  },
+  currentUserHighlight: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+    backgroundColor: colors.primaryMuted,
   },
   rankBadge: {
     width: 36,

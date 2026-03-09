@@ -11,15 +11,17 @@ datasource db {
 }
 
 model User {
-  id               String   @id @default(uuid())
-  auth0Id          String   @unique // Auth0 user ID (sub claim)
-  email            String?  @unique // Optional - may not be in access token
+  id               String    @id @default(uuid())
+  auth0Id          String    @unique // Auth0 user ID (sub claim)
+  email            String?   @unique // Optional - may not be in access token
   firstName        String?
   lastName         String?
-  leaderboardScore Int      @default(0)
-  role             String   @default("user") // "user", "admin", "moderator", etc.
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  leaderboardScore Int       @default(0)
+  role             String    @default("user") // "user", "admin", "moderator", etc.
+  loginStreak      Int       @default(0) // Consecutive days with at least one login
+  lastLoginAt      DateTime? // Last date (UTC) user was counted as "logged in" for streak
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }
 
 model BinQuiz {

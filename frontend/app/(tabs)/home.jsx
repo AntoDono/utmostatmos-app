@@ -1,145 +1,589 @@
-import React from 'react';
-import { StyleSheet, View, Text, ImageBackground, Dimensions, ScrollView, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
-import colors from '../../constants/colors';
-import home_background from '../../assets/images/home_background.jpg';
-import map from '../../assets/images/map.jpg';
-import grass from '../../assets/images/grass.jpg';
-import sky from '../../assets/images/sky.jpg';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  ScrollView,
+  Modal,
+  Linking,
+  TextInput,
+  Pressable,
+  Platform,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useAuth } from "../../context/AuthContext";
+import { authAPI, leaderboardAPI } from "../../utils/api";
+import { Ionicons, MaterialCommunityIcons, FontAwesome } from "@expo/vector-icons";
 
-const { width, height } = Dimensions.get('window');
+const CONTACT_EMAIL = "admin@utmostatmos.org";
 
 export default function Home() {
   const router = useRouter();
+  const { user, isAuthenticated, getAccessToken } = useAuth();
+  const [showHelpMenu, setShowHelpMenu] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [showIconGuide, setShowIconGuide] = useState(false);
+  const [showFeedbackForm, setShowFeedbackForm] = useState(false);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [streak, setStreak] = useState(0);
+  const [rank, setRank] = useState(null);
+  const [points, setPoints] = useState(null);
+
+  // Fetch profile on load when authenticated; backend updates streak for consecutive logins
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setStreak(0);
+      setRank(null);
+      setPoints(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const token = await getAccessToken();
+        if (!token || cancelled) return;
+
+        // Profile: updates and returns streak
+        const { user: profile } = await authAPI.getProfile(token);
+        if (!cancelled && profile?.loginStreak != null) {
+          setStreak(profile.loginStreak);
+        }
+
+        // Leaderboard: returns current user's global rank and score
+        const leaderboard = await leaderboardAPI.getLeaderboard(token);
+        if (!cancelled) {
+          if (leaderboard.currentUserRank != null) {
+            setRank(leaderboard.currentUserRank);
+          } else {
+            setRank(null);
+          }
+          if (leaderboard.currentUser?.leaderboardScore != null) {
+            setPoints(leaderboard.currentUser.leaderboardScore);
+          } else {
+            setPoints(null);
+          }
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setStreak(0);
+          setRank(null);
+          setPoints(null);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, getAccessToken]);
+
+  // Prefer first name from profile; fall back to given_name, nickname, or email prefix
+  const name =
+    (user?.name?.trim() && user.name.split(" ")[0]) ||
+    user?.given_name ||
+    user?.nickname ||
+    (user?.email?.includes("@") ? user.email.split("@")[0] : null) ||
+    "User";
+
+  const openTutorial = () => {
+    setShowHelpMenu(false);
+    setShowTutorial(true);
+  };
+
+  const openIconGuide = () => {
+    setShowHelpMenu(false);
+    setShowIconGuide(true);
+  };
+
+  const openFeedbackForm = () => {
+    setShowHelpMenu(false);
+    setFeedbackText("");
+    setShowFeedbackForm(true);
+  };
+
+  const handleContactEmail = () => {
+    setShowHelpMenu(false);
+    Linking.openURL(`mailto:${CONTACT_EMAIL}`).catch(() => { });
+  };
+
+  const submitFeedback = () => {
+    setShowFeedbackForm(false);
+    setFeedbackText("");
+  };
 
   return (
-    <ImageBackground
-      source={home_background}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.overlay}>
-          {/* BOX 1 - Map */}
-          <TouchableOpacity onPress={() => router.push('/(tabs)/map')} activeOpacity={0.8}>
-            <ImageBackground source={map} style={styles.box} imageStyle={styles.boxImage}>
-              <Text style={styles.names}>Map</Text>
-              <View style={styles.nextPage}>
-                <Text style={styles.nextPageText}>Go to next page</Text>
-              </View>
-            </ImageBackground>
+    <View style={{ flex: 1 }}>
+
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
+
+        {/* HEADER (page-level help + logo only; profile is in global header now) */}
+        <View style={styles.header}>
+
+          {/* Help (question mark in circle) - opens dropdown */}
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => setShowHelpMenu(true)}
+          >
+            <Ionicons name="help-circle-outline" size={28} color="#2c3e50" />
           </TouchableOpacity>
 
-          {/* BOX 2 - Contests */}
-          <TouchableOpacity onPress={() => router.push('/(tabs)/contests')} activeOpacity={0.8}>
-            <ImageBackground source={sky} style={styles.box} imageStyle={styles.boxImage}>
-              <Text style={styles.names}>Contests / Scholarships</Text>
-              <View style={styles.nextPage}>
-                <Text style={styles.nextPageText}>Go to next page</Text>
-              </View>
-            </ImageBackground>
+          {/* Logo - absolutely centered */}
+          <View style={styles.logoWrap} pointerEvents="box-none">
+            <Text style={styles.logo}>Utmost Atmos</Text>
+          </View>
+
+          {/* Leaderboard button - top right, same spot as before */}
+          <TouchableOpacity
+            style={styles.leaderboardButton}
+            onPress={() => router.push("/(tabs)/leaderboard")}
+          >
+            <Ionicons name="podium-outline" size={20} color="#2c3e50" />
+            <Text style={styles.leaderboardButtonText}>Leaderboard</Text>
           </TouchableOpacity>
 
-          {/* BOX 3 - Quiz */}
-          <TouchableOpacity onPress={() => router.push('/(tabs)/quiz')} activeOpacity={0.8}>
-            <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
-              <Text style={styles.names}>Quiz</Text>
-              <View style={styles.nextPage}>
-                <Text style={styles.nextPageText}>Go to next page</Text>
-              </View>
-            </ImageBackground>
-          </TouchableOpacity>
-
-          {/* BOX 4 - Leaderboard */}
-          <TouchableOpacity onPress={() => router.push('/(tabs)/leaderboard')} activeOpacity={0.8}>
-            <ImageBackground source={grass} style={styles.box} imageStyle={styles.boxImage}>
-              <Text style={styles.names}>Leaderboard</Text>
-              <View style={styles.nextPage}>
-                <Text style={styles.nextPageText}>Go to next page</Text>
-              </View>
-            </ImageBackground>
-          </TouchableOpacity>
-
-          {/* BOX 5 - Admin Dashboard */}
-          <TouchableOpacity onPress={() => router.push('/(tabs)/admin')} activeOpacity={0.8}>
-            <ImageBackground source={sky} style={styles.box} imageStyle={styles.boxImage}>
-              <Text style={styles.names}>Admin Dashboard</Text>
-              <View style={styles.nextPage}>
-                <Text style={styles.nextPageText}>Go to next page</Text>
-              </View>
-            </ImageBackground>
-          </TouchableOpacity>
         </View>
+
+        {/* WELCOME CARD */}
+        <View style={styles.welcomeCard}>
+          <Text style={styles.welcomeText}>Welcome back, {name} 👋</Text>
+
+          <Text style={styles.subtitle}>
+            Continue learning how to dispose waste properly and earn rewards.
+          </Text>
+
+          <View style={styles.statsRow}>
+            <View style={styles.stat}>
+              <Ionicons name="flame" size={22} color="#e67e22" />
+              <Text style={styles.statNumber}>{streak}</Text>
+              <Text style={styles.statLabel}>Day streak</Text>
+            </View>
+
+            <View style={styles.stat}>
+              <FontAwesome name="trophy" size={20} color="#FFC107" />
+              <Text style={styles.statNumber}>{points != null ? points : 0}</Text>
+              <Text style={styles.statLabel}>Points</Text>
+            </View>
+
+            <View style={styles.stat}>
+              <Ionicons name="people" size={22} color="#3498db" />
+              <Text style={styles.statNumber}>
+                {rank != null ? `#${rank}` : "--"}
+              </Text>
+              <Text style={styles.statLabel}>Rank</Text>
+            </View>
+          </View>
+        </View>
+
       </ScrollView>
-    </ImageBackground>
+
+      {/* BOTTOM NAVIGATION BAR */}
+
+      <View style={styles.navBar}>
+
+        <TouchableOpacity style={styles.navItem}>
+          <Ionicons name="home" size={26} color="#2ecc71" />
+          <Text style={styles.navLabel}>Home</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => router.push("/(tabs)/quiz")}
+        >
+          <MaterialCommunityIcons name="recycle" size={26} color="#2c3e50" />
+          <Text style={styles.navLabel}>Quiz</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => router.push("/(tabs)/contests")}
+        >
+          <Ionicons name="school" size={26} color="#2c3e50" />
+          <Text style={styles.navLabel}>Contests</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => router.push("/(tabs)/map")}
+        >
+          <Ionicons name="map" size={26} color="#2c3e50" />
+          <Text style={styles.navLabel}>Map</Text>
+        </TouchableOpacity>
+
+      </View>
+
+      {/* HELP DROPDOWN (top left) */}
+      <Modal
+        visible={showHelpMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowHelpMenu(false)}
+      >
+        <Pressable style={styles.menuOverlay} onPress={() => setShowHelpMenu(false)}>
+          <View style={styles.helpMenuCard}>
+            <TouchableOpacity style={styles.helpMenuItem} onPress={openIconGuide}>
+              <Ionicons name="information-circle-outline" size={22} color="#2c3e50" />
+              <Text style={styles.helpMenuText}>What each button does</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.helpMenuItem} onPress={openFeedbackForm}>
+              <Ionicons name="chatbubble-outline" size={22} color="#2c3e50" />
+              <Text style={styles.helpMenuText}>Give feedback or ask questions</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.helpMenuItem} onPress={handleContactEmail}>
+              <Ionicons name="mail-outline" size={22} color="#2c3e50" />
+              <Text style={styles.helpMenuText}>Contact us: {CONTACT_EMAIL}</Text>
+            </TouchableOpacity>
+          </View>
+        </Pressable>
+      </Modal>
+
+      {/* TUTORIAL / USER GUIDE */}
+      <Modal
+        visible={showTutorial}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowTutorial(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Tutorial / User guide</Text>
+              <TouchableOpacity onPress={() => setShowTutorial(false)} hitSlop={12}>
+                <Ionicons name="close" size={28} color="#2c3e50" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.modalParagraph}>
+                Revisit the app tutorial and user guide here. Design team: add step-by-step content or link to a full guide.
+              </Text>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* WHAT EACH BUTTON DOES (bubble/arrow copy from design team) */}
+      <Modal
+        visible={showIconGuide}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowIconGuide(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>What each button does</Text>
+              <TouchableOpacity onPress={() => setShowIconGuide(false)} hitSlop={12}>
+                <Ionicons name="close" size={28} color="#2c3e50" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.modalNote}>
+                Design team: add descriptions and arrow graphics for each button/icon.
+              </Text>
+              <View style={styles.iconGuideList}>
+                <View style={styles.iconGuideRow}>
+                  <Ionicons name="home" size={24} color="#2ecc71" />
+                  <Text style={styles.iconGuideLabel}>Home – main dashboard</Text>
+                </View>
+                <View style={styles.iconGuideRow}>
+                  <MaterialCommunityIcons name="recycle" size={24} color="#2c3e50" />
+                  <Text style={styles.iconGuideLabel}>Quiz – waste sorting game</Text>
+                </View>
+                <View style={styles.iconGuideRow}>
+                  <Ionicons name="school" size={24} color="#2c3e50" />
+                  <Text style={styles.iconGuideLabel}>Contests / Scholarships</Text>
+                </View>
+                <View style={styles.iconGuideRow}>
+                  <Ionicons name="map" size={24} color="#2c3e50" />
+                  <Text style={styles.iconGuideLabel}>Map – locations</Text>
+                </View>
+                <View style={styles.iconGuideRow}>
+                  <Ionicons name="podium-outline" size={24} color="#2c3e50" />
+                  <Text style={styles.iconGuideLabel}>Leaderboard – top right</Text>
+                </View>
+                <View style={styles.iconGuideRow}>
+                  <Image source={{ uri: user?.picture || "https://i.pravatar.cc/100" }} style={styles.iconGuideAvatar} />
+                  <Text style={styles.iconGuideLabel}>Profile – top right</Text>
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* FEEDBACK FORM (direct/embedded) */}
+      <Modal
+        visible={showFeedbackForm}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowFeedbackForm(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Give feedback or ask a question</Text>
+              <TouchableOpacity onPress={() => setShowFeedbackForm(false)} hitSlop={12}>
+                <Ionicons name="close" size={28} color="#2c3e50" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.modalBody}>
+              <TextInput
+                style={styles.feedbackInput}
+                placeholder="Your feedback or question..."
+                placeholderTextColor="#95a5a6"
+                multiline
+                numberOfLines={4}
+                value={feedbackText}
+                onChangeText={setFeedbackText}
+                textAlignVertical="top"
+              />
+              <TouchableOpacity style={styles.feedbackSubmitButton} onPress={submitFeedback}>
+                <Text style={styles.feedbackSubmitText}>Submit</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  backgroundImage: {
+
+  container: {
     flex: 1,
-    width: '100%',
-    height: '100%',
+    backgroundColor: "#f4f7f9",
   },
 
-  scrollContent: {
-    flexGrow: 1,
-    minHeight: height,
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginTop: 50,
   },
 
-  overlay: {
+  logoWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  logo: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#2c3e50",
+  },
+
+  iconButton: {
+    padding: 4,
+  },
+
+  headerRightSpacer: {
+    width: 34,
+  },
+
+  leaderboardButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+
+  leaderboardButtonText: {
+    fontSize: 12,
+    color: "#2c3e50",
+    fontWeight: "600",
+  },
+
+  avatar: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+  },
+
+  welcomeCard: {
+    backgroundColor: "white",
+    marginHorizontal: 20,
+    marginTop: 25,
+    borderRadius: 18,
+    padding: 20,
+    elevation: 3,
+  },
+
+  welcomeText: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#2c3e50",
+  },
+
+  subtitle: {
+    marginTop: 6,
+    color: "#7f8c8d",
+  },
+
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginTop: 20,
+  },
+
+  stat: {
+    alignItems: "center",
+  },
+
+  statNumber: {
+    fontWeight: "700",
+    fontSize: 18,
+    marginTop: 4,
+  },
+
+  statLabel: {
+    fontSize: 12,
+    color: "#7f8c8d",
+  },
+
+  navBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    justifyContent: "space-around",
+    backgroundColor: "white",
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderColor: "#e6e6e6",
+  },
+
+  navItem: {
+    alignItems: "center",
+  },
+
+  navLabel: {
+    fontSize: 11,
+    marginTop: 3,
+    color: "#2c3e50",
+  },
+
+  notificationDot: {
+    position: "absolute",
+    top: -2,
+    right: -6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "red",
+  },
+
+  menuOverlay: {
     flex: 1,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-    paddingVertical: 40,
-    paddingTop: Math.max(20, height * 0.03),
-    paddingBottom: 40,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    paddingTop: Platform.OS === "web" ? 90 : 100,
+    paddingLeft: 20,
+    alignItems: "flex-start",
   },
-
-  box: {
-    width: Math.min(width * 0.85, 400),
-    height: Math.max(height * 0.13, 100),
-    justifyContent: 'center',
-    alignItems: 'center',
+  helpMenuCard: {
+    backgroundColor: "white",
     borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: Math.max(15, height * 0.02),
-    borderWidth: 2,
-    borderColor: 'rgba(0, 0, 0, 0.3)',
-  },
-
-  boxImage: {
-    borderRadius: 12,
-    opacity: 0.9,
-  },
-
-  names: {
-    fontSize: Math.min(18, width * 0.045),
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-    textAlign: 'center',
-    paddingHorizontal: 10,
-  },
-
-  nextPage: {
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderRadius: 8,
+    minWidth: 280,
     paddingVertical: 8,
-    paddingHorizontal: 16,
+    ...Platform.select({
+      web: {},
+      default: { elevation: 8, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 8 },
+    }),
+  },
+  helpMenuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+  },
+  helpMenuText: {
+    fontSize: 15,
+    color: "#2c3e50",
+    flex: 1,
   },
 
-  nextPageText: {
-    color: 'white',
-    fontWeight: '500',
-    fontSize: Math.min(14, width * 0.035),
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    padding: 24,
   },
+  modalCard: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e6e6e6",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#2c3e50",
+  },
+  modalBody: {
+    padding: 20,
+  },
+  modalParagraph: {
+    fontSize: 15,
+    color: "#2c3e50",
+    lineHeight: 22,
+  },
+  modalNote: {
+    fontSize: 14,
+    color: "#7f8c8d",
+    fontStyle: "italic",
+    marginBottom: 16,
+  },
+  iconGuideList: {
+    gap: 12,
+  },
+  iconGuideRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  iconGuideLabel: {
+    fontSize: 15,
+    color: "#2c3e50",
+  },
+  iconGuideAvatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+  },
+  feedbackInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 10,
+    padding: 14,
+    fontSize: 15,
+    minHeight: 100,
+    color: "#2c3e50",
+  },
+  feedbackSubmitButton: {
+    backgroundColor: "#2ecc71",
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginTop: 16,
+    alignItems: "center",
+  },
+  feedbackSubmitText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "white",
+  },
+
 });

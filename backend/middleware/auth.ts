@@ -14,11 +14,13 @@ export const checkJwt = auth({
 export interface DbUser {
   id: string;
   auth0Id: string;
-  email: string;
+  email: string | null;
   firstName: string | null;
   lastName: string | null;
   leaderboardScore: number;
   role: string;
+  loginStreak: number;
+  lastLoginAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,7 +40,7 @@ export const attachUser: RequestHandler = async (
     // The auth middleware adds 'auth' to the request
     const auth = (req as any).auth;
     const auth0Id = auth?.payload?.sub;
-    
+
     if (!auth0Id) {
       res.status(401).json({ error: 'No user identifier in token' });
       return;
@@ -50,21 +52,21 @@ export const attachUser: RequestHandler = async (
       res.status(500).json({ error: 'Missing AUTH0_NAMESPACE environment variable' });
       return;
     }
-    
+
     // Extract email from token claims (optional - may not be in access token)
-    const email = auth?.payload?.email || 
-                  auth?.payload?.[`${namespace}/email`] || 
-                  null;
+    const email = auth?.payload?.email ||
+      auth?.payload?.[`${namespace}/email`] ||
+      null;
 
     // Extract name fields from token
     // Auth0 can provide: name (full name), given_name (first), family_name (last)
-    let firstName = auth?.payload?.given_name || 
-                    auth?.payload?.[`${namespace}/given_name`] || 
-                    null;
-    let lastName = auth?.payload?.family_name || 
-                   auth?.payload?.[`${namespace}/family_name`] || 
-                   null;
-    
+    let firstName = auth?.payload?.given_name ||
+      auth?.payload?.[`${namespace}/given_name`] ||
+      null;
+    let lastName = auth?.payload?.family_name ||
+      auth?.payload?.[`${namespace}/family_name`] ||
+      null;
+
     // If no given/family names, try to split the full name
     const fullName = auth?.payload?.name || auth?.payload?.[`${namespace}/name`];
     if (!firstName && !lastName && fullName) {
@@ -80,7 +82,7 @@ export const attachUser: RequestHandler = async (
     // Find or create the user in our database
     const user = await findOrCreateUserByAuth0Id(auth0Id, email, firstName, lastName);
     (req as AuthenticatedRequest).user = user;
-    
+
     next();
   } catch (error: any) {
     logger.error('Error attaching user', { error: error.message });
@@ -98,7 +100,7 @@ export const optionalAuth: RequestHandler = async (
   next: NextFunction
 ): Promise<void> => {
   const authHeader = req.headers.authorization;
-  
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     // No token provided, continue without user
     next();

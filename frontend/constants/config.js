@@ -81,10 +81,10 @@ export const APP_SCHEME = 'org.utmostatmos.app';
  */
 export const getAuth0RedirectUrl = (platform) => {
   if (platform === 'web') {
-    return undefined; // Web uses default Auth0 behavior
+    return `${FRONTEND_URL}/callback`;
   }
-  
+
   // Format: {bundleId}://{auth0Domain}/{platform}/{bundleId}/callback
-  return `${APP_BUNDLE_ID}://${AUTH0_DOMAIN}/${platform}/${APP_BUNDLE_ID}/callback`;
+  return `${APP_SCHEME}://${AUTH0_DOMAIN}/${platform}/${APP_BUNDLE_ID}/callback`;
 };
 

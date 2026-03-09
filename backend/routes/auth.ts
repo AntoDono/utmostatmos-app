@@ -1,11 +1,11 @@
 import express, { Request, Response } from 'express';
 import { requireAuth, AuthenticatedRequest } from '../middleware/auth.js';
-import { updateUserByAuth0Id, deleteUserByAuth0Id } from '../schema/user.js';
+import { updateUserByAuth0Id, deleteUserByAuth0Id, recordLoginAndUpdateStreak } from '../schema/user.js';
 
 const router = express.Router();
 
 // Get current user profile
-// The requireAuth middleware validates JWT and attaches user to request
+// Updates daily login streak when called (consecutive days = streak goes up)
 router.get('/profile', ...requireAuth, async (req: Request, res: Response): Promise<void> => {
     try {
         const authReq = req as AuthenticatedRequest;
@@ -14,8 +14,9 @@ router.get('/profile', ...requireAuth, async (req: Request, res: Response): Prom
             return;
         }
 
+        const user = await recordLoginAndUpdateStreak(authReq.user.auth0Id);
         res.status(200).json({
-            user: authReq.user
+            user: user ?? authReq.user
         });
     } catch (error: any) {
         res.status(500).json({ error: error.message });
