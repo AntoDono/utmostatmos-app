@@ -122,11 +122,11 @@ export const quizAPI = {
 
 // Leaderboard API
 export const leaderboardAPI = {
-  // Get leaderboard (public endpoint)
-  async getLeaderboard() {
+  // Get leaderboard; optionally include auth to get current user's rank
+  async getLeaderboard(accessToken = null) {
     return apiRequest('/leaderboard', {
       method: 'GET',
-    });
+    }, accessToken);
   },
 };
 
