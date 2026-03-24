@@ -4,6 +4,7 @@ import { Platform, DeviceEventEmitter } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_AUDIENCE, FRONTEND_URL, getAuth0RedirectUrl } from '../constants/config';
+import { isAccessTokenExpired } from '../utils/jwtExpiry';
 
 // WebBrowser configuration for better UX
 WebBrowser.maybeCompleteAuthSession();
@@ -157,6 +158,15 @@ const WebAuthProvider = ({ children }) => {
     }
     if (!accessToken) {
       throw new Error('No access token available');
+    }
+    if (isAccessTokenExpired(accessToken)) {
+      // Clear stale state so the UI shows the user as signed out
+      setAccessToken(null);
+      setUser(null);
+      localStorage.removeItem('auth0_access_token');
+      localStorage.removeItem('auth0_user');
+      window.dispatchEvent(new Event('auth-changed'));
+      throw new Error('Access token expired. Please log in again.');
     }
     return accessToken;
   };

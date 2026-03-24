@@ -38,14 +38,14 @@ export default function CustomDrawerContent(props) {
     { name: 'Quiz', route: '/quiz', icon: 'game-controller', iconOutline: 'game-controller-outline' },
     { name: 'Map', route: '/map', icon: 'map', iconOutline: 'map-outline' },
     { name: 'Leaderboard', route: '/leaderboard', icon: 'podium', iconOutline: 'podium-outline' },
+    { name: 'My Account', route: '/account', icon: 'person', iconOutline: 'person-outline', authOnly: true },
     { name: 'Admin', route: '/admin', icon: 'settings', iconOutline: 'settings-outline', adminOnly: true },
   ];
 
-  // Filter menu items based on user role
+  // Filter menu items based on user role and auth state
   const menuItems = allMenuItems.filter(item => {
-    if (item.adminOnly) {
-      return userRole === 'admin';
-    }
+    if (item.adminOnly) return userRole === 'admin';
+    if (item.authOnly) return isAuthenticated && !isAnonymous;
     return true;
   });
 

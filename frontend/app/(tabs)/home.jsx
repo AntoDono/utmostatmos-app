@@ -113,7 +113,7 @@ export default function Home() {
   return (
     <View style={{ flex: 1 }}>
 
-      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
 
         {/* HEADER (page-level help + logo only; profile is in global header now) */}
         <View style={styles.header}>
@@ -173,42 +173,75 @@ export default function Home() {
           </View>
         </View>
 
+        {/* EXPLORE SECTION */}
+        <View style={styles.exploreSection}>
+          <Text style={styles.exploreSectionTitle}>Explore</Text>
+          <View style={styles.exploreGrid}>
+
+            <TouchableOpacity
+              style={styles.exploreCard}
+              onPress={() => router.push("/(tabs)/quiz")}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.exploreIconWrap, { backgroundColor: "#E8F5E9" }]}>
+                <MaterialCommunityIcons name="recycle" size={28} color="#388E3C" />
+              </View>
+              <View style={styles.exploreCardFooter}>
+                <Text style={styles.exploreCardTitle}>Quiz</Text>
+                <Ionicons name="chevron-forward" size={16} color="#bdc3c7" />
+              </View>
+              <Text style={styles.exploreCardDesc}>Test your waste-sorting knowledge</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.exploreCard}
+              onPress={() => router.push("/(tabs)/contests")}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.exploreIconWrap, { backgroundColor: "#FFF8E1" }]}>
+                <Ionicons name="school" size={28} color="#F9A825" />
+              </View>
+              <View style={styles.exploreCardFooter}>
+                <Text style={styles.exploreCardTitle}>Contests</Text>
+                <Ionicons name="chevron-forward" size={16} color="#bdc3c7" />
+              </View>
+              <Text style={styles.exploreCardDesc}>Join contests and earn rewards</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.exploreCard}
+              onPress={() => router.push("/(tabs)/map")}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.exploreIconWrap, { backgroundColor: "#E3F2FD" }]}>
+                <Ionicons name="map" size={28} color="#1976D2" />
+              </View>
+              <View style={styles.exploreCardFooter}>
+                <Text style={styles.exploreCardTitle}>Map</Text>
+                <Ionicons name="chevron-forward" size={16} color="#bdc3c7" />
+              </View>
+              <Text style={styles.exploreCardDesc}>Find recycling centers near you</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.exploreCard}
+              onPress={() => router.push("/(tabs)/leaderboard")}
+              activeOpacity={0.75}
+            >
+              <View style={[styles.exploreIconWrap, { backgroundColor: "#FCE4EC" }]}>
+                <Ionicons name="podium" size={28} color="#C62828" />
+              </View>
+              <View style={styles.exploreCardFooter}>
+                <Text style={styles.exploreCardTitle}>Leaderboard</Text>
+                <Ionicons name="chevron-forward" size={16} color="#bdc3c7" />
+              </View>
+              <Text style={styles.exploreCardDesc}>See where you rank globally</Text>
+            </TouchableOpacity>
+
+          </View>
+        </View>
+
       </ScrollView>
-
-      {/* BOTTOM NAVIGATION BAR */}
-
-      <View style={styles.navBar}>
-
-        <TouchableOpacity style={styles.navItem}>
-          <Ionicons name="home" size={26} color="#2ecc71" />
-          <Text style={styles.navLabel}>Home</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/(tabs)/quiz")}
-        >
-          <MaterialCommunityIcons name="recycle" size={26} color="#2c3e50" />
-          <Text style={styles.navLabel}>Quiz</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/(tabs)/contests")}
-        >
-          <Ionicons name="school" size={26} color="#2c3e50" />
-          <Text style={styles.navLabel}>Contests</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => router.push("/(tabs)/map")}
-        >
-          <Ionicons name="map" size={26} color="#2c3e50" />
-          <Text style={styles.navLabel}>Map</Text>
-        </TouchableOpacity>
-
-      </View>
 
       {/* HELP DROPDOWN (top left) */}
       <Modal
@@ -404,6 +437,57 @@ const styles = StyleSheet.create({
     borderRadius: 17,
   },
 
+  exploreSection: {
+    marginHorizontal: 20,
+    marginTop: 28,
+  },
+  exploreSectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#2c3e50",
+    marginBottom: 14,
+  },
+  exploreGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    justifyContent: "center",
+  },
+  exploreCard: {
+    backgroundColor: "white",
+    borderRadius: 16,
+    padding: 16,
+    width: "47%",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    gap: 8,
+  },
+  exploreIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  exploreCardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  exploreCardTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#2c3e50",
+  },
+  exploreCardDesc: {
+    fontSize: 12,
+    color: "#7f8c8d",
+    lineHeight: 17,
+  },
+
   welcomeCard: {
     backgroundColor: "white",
     marginHorizontal: 20,
@@ -443,29 +527,6 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     color: "#7f8c8d",
-  },
-
-  navBar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    backgroundColor: "white",
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderColor: "#e6e6e6",
-  },
-
-  navItem: {
-    alignItems: "center",
-  },
-
-  navLabel: {
-    fontSize: 11,
-    marginTop: 3,
-    color: "#2c3e50",
   },
 
   notificationDot: {

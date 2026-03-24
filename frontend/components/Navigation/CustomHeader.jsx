@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, SafeAreaView, Modal, Pressable, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import colors from '../../constants/colors';
 import { useAuth } from '../../context/AuthContext';
 
 export default function CustomHeader({ title }) {
   const navigation = useNavigation();
+  const router = useRouter();
   const { user, isAuthenticated, login, logout, isLoggingIn, isLoggingOut } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
@@ -64,12 +66,12 @@ export default function CustomHeader({ title }) {
                 <TouchableOpacity
                   style={styles.profileMenuItem}
                   onPress={() => {
-                    // Placeholder: hook up to real profile screen later
                     setShowProfileMenu(false);
+                    router.push('/account');
                   }}
                 >
                   <Ionicons name="person-outline" size={20} color={colors.DARKGREEN} />
-                  <Text style={styles.profileMenuText}>About my account & identity</Text>
+                  <Text style={styles.profileMenuText}>My Account</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity

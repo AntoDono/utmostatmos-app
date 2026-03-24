@@ -8,10 +8,10 @@ import colors from '../../constants/colors'
 
 export default function DrawerLayout() {
     const formatTitle = (name) => {
-        // Handle special cases
         if (name === 'contests') return 'Contests';
         if (name === 'leaderboard') return 'Leaderboard';
         if (name === 'admin') return 'Admin Dashboard';
+        if (name === 'account') return 'My Account';
         return name.charAt(0).toUpperCase() + name.slice(1);
     };
 
@@ -68,6 +68,13 @@ export default function DrawerLayout() {
                     options={{
                         drawerLabel: 'Admin',
                         title: 'Admin Dashboard',
+                    }}
+                />
+                <Drawer.Screen
+                    name="account"
+                    options={{
+                        drawerLabel: 'My Account',
+                        title: 'My Account',
                     }}
                 />
             </Drawer>
