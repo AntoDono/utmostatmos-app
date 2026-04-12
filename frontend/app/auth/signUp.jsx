@@ -8,7 +8,7 @@ import colors from '../../constants/colors'
 
 export default function SignUp() {
     const router = useRouter();
-    const { login, isAuthenticated, isLoading, error } = useAuth();
+    const { loginWithGoogle, isAuthenticated, isLoading, error } = useAuth();
 
     // Redirect to home if already authenticated
     useEffect(() => {
@@ -28,7 +28,7 @@ export default function SignUp() {
       try {
         // Auth0 Universal Login handles both signup and login
         // The user can click "Sign up" on the Auth0 page
-        await login();
+        await loginWithGoogle();
         // Navigation will happen automatically via useEffect when isAuthenticated changes
       } catch (err) {
         Alert.alert('Error', err.message);

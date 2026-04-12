@@ -9,7 +9,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function CustomHeader({ title }) {
   const navigation = useNavigation();
   const router = useRouter();
-  const { user, isAuthenticated, login, logout, isLoggingIn, isLoggingOut } = useAuth();
+  const { user, isAuthenticated, loginWithGoogle, logout, isLoggingIn, isLoggingOut } = useAuth();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   return (
@@ -74,16 +74,17 @@ export default function CustomHeader({ title }) {
                   <Text style={styles.profileMenuText}>My Account</Text>
                 </TouchableOpacity>
 
+                {/* Change profile picture — coming soon
                 <TouchableOpacity
                   style={styles.profileMenuItem}
                   onPress={() => {
-                    // Placeholder for avatar feature
                     setShowProfileMenu(false);
                   }}
                 >
                   <Ionicons name="image-outline" size={20} color={colors.DARKGREEN} />
                   <Text style={styles.profileMenuText}>Change profile picture (coming soon)</Text>
                 </TouchableOpacity>
+                */}
 
                 <TouchableOpacity
                   style={styles.profileMenuItem}
@@ -104,7 +105,7 @@ export default function CustomHeader({ title }) {
                   onPress={async () => {
                     if (isLoggingIn) return;
                     setShowProfileMenu(false);
-                    await login();
+                    await loginWithGoogle();
                   }}
                 >
                   <Ionicons name="log-in-outline" size={20} color={colors.DARKGREEN} />

@@ -118,6 +118,76 @@ export const authStyles = StyleSheet.create({
     fontSize: 14,
   },
 
+  // Social login buttons
+  socialButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    height: 48,
+    borderRadius: 8,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  googleButton: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dadce0',
+  },
+
+  googleButtonText: {
+    color: '#3c4043',
+    fontSize: 16,
+    fontFamily: 'Montserrat-Bold',
+    marginLeft: 10,
+  },
+
+  googleIcon: {
+    width: 20,
+    height: 20,
+  },
+
+  appleButton: {
+    backgroundColor: '#000000',
+  },
+
+  appleButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontFamily: 'Montserrat-Bold',
+    marginLeft: 8,
+  },
+
+  appleIcon: {
+    fontSize: 20,
+    color: '#ffffff',
+    lineHeight: 24,
+  },
+
+  socialDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+
+  socialDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#e0e0e0',
+  },
+
+  socialDividerText: {
+    marginHorizontal: 12,
+    fontSize: 13,
+    color: '#9e9e9e',
+    fontFamily: 'Montserrat-Regular',
+  },
+
   // Footer
   footerContainer: {
     height: 40,

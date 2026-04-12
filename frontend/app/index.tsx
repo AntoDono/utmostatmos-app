@@ -1,25 +1,47 @@
 import { Image, Text, View, StyleSheet, TouchableOpacity, Platform } from "react-native"
+import React, { useEffect } from 'react'
 import colors from './../constants/colors'
 import { useRouter } from "expo-router"
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useAuth } from '../context/AuthContext'
 
 export default function Index() {
   const router = useRouter()
+  const { loginWithGoogle, loginWithApple, isAuthenticated } = useAuth()
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/(tabs)/home')
+    }
+  }, [isAuthenticated])
   
   const handleAnonymousLogin = async () => {
     try {
-      // Set anonymous flag in storage
       await AsyncStorage.setItem('isAnonymous', 'true')
       
-      // For web only, trigger the auth-changed event
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         window.dispatchEvent(new Event('auth-changed'))
       }
       
-      // Navigate to home screen
       router.replace('/(tabs)/home')
     } catch (error) {
       console.error('Error setting anonymous mode:', error)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle()
+    } catch (err) {
+      console.error('Google login error:', err)
+    }
+  }
+
+  const handleAppleLogin = async () => {
+    try {
+      await loginWithApple()
+    } catch (err) {
+      console.error('Apple login error:', err)
     }
   }
   
@@ -34,16 +56,22 @@ export default function Index() {
         /> 
       </View> 
 
-      <TouchableOpacity style={[styles.button, {borderWidth: 1}, {backgroundColor: colors.DARKGREEN}, styles.loginButton]}
-        onPress={()=>router.push('/auth/signIn')}
+      <TouchableOpacity
+        style={[styles.button, { borderWidth: 1, borderColor: '#dadce0', backgroundColor: colors.WHITE }, styles.loginButton]}
+        onPress={handleGoogleLogin}
       >
-        <Text style={[styles.buttonText, {color: colors.WHITE}]}>Login</Text>
+        <Text style={[styles.buttonText, { color: '#3c4043' }]}>G  Login with Google</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={[styles.button, {borderWidth: 1}, {backgroundColor: colors.WHITE}, styles.registerButton]}
-        onPress={()=>router.push('/auth/signUp')}
-      >
-        <Text style={[styles.buttonText, {color: colors.GREY}]}>Register</Text>
-      </TouchableOpacity>
+
+      {Platform.OS === 'ios' && (
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: '#000000' }, styles.registerButton]}
+          onPress={handleAppleLogin}
+        >
+          <Text style={[styles.buttonText, { color: colors.WHITE }]}>{'\uf8ff'}  Sign in with Apple</Text>
+        </TouchableOpacity>
+      )}
+
       <TouchableOpacity style={[styles.button, {borderWidth: 1, borderColor: colors.GREY}, {backgroundColor: colors.WHITE}, styles.guestButton]}
         onPress={handleAnonymousLogin}
       >

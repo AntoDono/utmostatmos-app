@@ -1,7 +1,30 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, LayoutAnimation, Platform, UIManager, ActivityIndicator } from 'react-native'
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Animated, LayoutAnimation, Platform, UIManager, ActivityIndicator, Modal } from 'react-native'
 import React, { useState, useRef, useEffect } from 'react'
 import colors from '../../constants/colors'
 import { contestAPI } from '../../utils/api'
+
+const CONTEST_RULES = `GENERAL CONTEST RULES
+
+1. ELIGIBILITY
+Contests and scholarships are open to eligible participants as specified in each individual contest listing. Participants must meet all stated eligibility requirements.
+
+2. ENTRY
+Entries must be submitted by the deadline listed for each contest. Late entries will not be accepted. Limit one entry per person unless otherwise stated.
+
+3. JUDGING
+Entries will be judged based on criteria specified in each contest listing. All judging decisions are final.
+
+4. PRIZES
+Prize values are as stated in each contest listing. Prizes are non-transferable and no cash substitution is permitted except at the sole discretion of the sponsor.
+
+5. GENERAL CONDITIONS
+By entering, participants agree to these Official Rules and the decisions of the judges, which are final and binding. Void where prohibited by law.
+
+6. PRIVACY
+Personal information collected in connection with a contest will be used only for contest administration and as described in our Privacy Policy.
+
+7. SPONSOR DISCLAIMER
+This contest is in no way sponsored, endorsed, or administered by, or associated with Apple Inc. Any questions, comments or complaints regarding the contest should be directed to the contest organizer, not to Apple Inc.`;
 
 // Enable LayoutAnimation for Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -107,6 +130,7 @@ export default function Contests() {
     const [contests, setContests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [rulesVisible, setRulesVisible] = useState(false);
 
     useEffect(() => {
         loadContests();
@@ -150,6 +174,13 @@ export default function Contests() {
                 <Text style={styles.headerSubtext}>Discover opportunities to showcase your environmental passion</Text>
             </View>
 
+            {/* Apple non-sponsorship disclaimer */}
+            <View style={styles.disclaimer}>
+                <Text style={styles.disclaimerText}>
+                    These contests and scholarships are in no way sponsored, endorsed, or administered by, or associated with Apple Inc.
+                </Text>
+            </View>
+
             {/* Content with Cards */}
             {loading ? (
                 <View style={styles.centerContainer}>
@@ -177,9 +208,35 @@ export default function Contests() {
                             onToggle={() => toggleExpand(contest.id)}
                         />
                     ))}
+
+                    {/* Official Rules button */}
+                    <TouchableOpacity style={styles.rulesButton} onPress={() => setRulesVisible(true)}>
+                        <Text style={styles.rulesButtonText}>📄 View Official Contest Rules</Text>
+                    </TouchableOpacity>
+
                     <View style={styles.bottomPadding} />
                 </ScrollView>
             )}
+
+            {/* Official Rules Modal */}
+            <Modal
+                visible={rulesVisible}
+                animationType="slide"
+                presentationStyle="pageSheet"
+                onRequestClose={() => setRulesVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalHeader}>
+                        <Text style={styles.modalTitle}>Official Contest Rules</Text>
+                        <TouchableOpacity onPress={() => setRulesVisible(false)} style={styles.modalCloseButton}>
+                            <Text style={styles.modalCloseText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                        <Text style={styles.modalRulesText}>{CONTEST_RULES}</Text>
+                    </ScrollView>
+                </View>
+            </Modal>
         </View>
     )
 }
@@ -389,5 +446,71 @@ const styles = StyleSheet.create({
         color: colors.textOnPrimary,
         fontSize: 16,
         fontWeight: '600',
+    },
+    rulesButton: {
+        backgroundColor: colors.surface,
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: 12,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    rulesButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: colors.primaryDark,
+    },
+    disclaimer: {
+        backgroundColor: colors.backgroundDark,
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+    },
+    disclaimerText: {
+        fontSize: 11,
+        color: colors.textMuted,
+        lineHeight: 17,
+        textAlign: 'center',
+        fontStyle: 'italic',
+    },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: colors.surface,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        paddingTop: 20,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: colors.primaryDark,
+    },
+    modalCloseButton: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        backgroundColor: colors.primaryMuted,
+        borderRadius: 8,
+    },
+    modalCloseText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: colors.primaryDark,
+    },
+    modalBody: {
+        flex: 1,
+        padding: 20,
+    },
+    modalRulesText: {
+        fontSize: 13,
+        color: colors.textSecondary,
+        lineHeight: 22,
     },
 })

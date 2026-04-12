@@ -1,4 +1,4 @@
-import { Text, View, Image, TouchableOpacity, Pressable, ActivityIndicator } from "react-native"
+import { Text, View, Image, TouchableOpacity, Pressable, ActivityIndicator, Platform } from "react-native"
 import React, { useEffect } from 'react'
 import { useRouter } from 'expo-router'
 import { useAuth } from '../../context/AuthContext'
@@ -8,29 +8,33 @@ import colors from '../../constants/colors'
 
 export default function SignIn() {
     const router = useRouter();
-    const { login, isAuthenticated, isLoading, error } = useAuth();
+    const { loginWithGoogle, loginWithApple, isAuthenticated, isLoading, error } = useAuth();
 
-    // Redirect to home if already authenticated
     useEffect(() => {
       if (isAuthenticated) {
         router.replace('/(tabs)/home');
       }
     }, [isAuthenticated]);
 
-    // Show error if login failed
     useEffect(() => {
       if (error) {
         Alert.alert('Error', error.message);
       }
     }, [error]);
     
-    const handleLogin = async () => {
+    const handleGoogleLogin = async () => {
       try {
-        await login();
-        // Navigation will happen automatically via useEffect when isAuthenticated changes
+        await loginWithGoogle();
       } catch (err) {
         Alert.alert('Error', err.message);
-        throw err;
+      }
+    };
+
+    const handleAppleLogin = async () => {
+      try {
+        await loginWithApple();
+      } catch (err) {
+        Alert.alert('Error', err.message);
       }
     };
     
@@ -54,13 +58,24 @@ export default function SignIn() {
           <ActivityIndicator size="large" color={colors.primaryDark} style={{ marginVertical: 20 }} />
         ) : (
           <>
-            <TouchableOpacity 
-              style={authStyles.button}
-              onPress={handleLogin}
+            <TouchableOpacity
+              style={[authStyles.socialButton, authStyles.googleButton]}
+              onPress={handleGoogleLogin}
               disabled={isLoading}
             >
-              <Text style={authStyles.buttonText}>Login</Text>
+              <Text style={authStyles.googleButtonText}>G  Login with Google</Text>
             </TouchableOpacity>
+
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity
+                style={[authStyles.socialButton, authStyles.appleButton]}
+                onPress={handleAppleLogin}
+                disabled={isLoading}
+              >
+                <Text style={authStyles.appleIcon}>{'\uf8ff'}</Text>
+                <Text style={authStyles.appleButtonText}>Sign in with Apple</Text>
+              </TouchableOpacity>
+            )}
 
             <View style={authStyles.linkContainer}>
               <Pressable 

@@ -87,7 +87,28 @@ const WebAuthProvider = ({ children }) => {
     };
   }, []);
 
-  const login = async () => {
+  const buildAuthUrl = (connection) => {
+    const redirectUri = `${FRONTEND_URL}/callback`;
+    const state = Math.random().toString(36).substring(7);
+    sessionStorage.setItem('auth0_state', state);
+
+    let url = `https://${AUTH0_DOMAIN}/authorize?` +
+      `response_type=token id_token&` +
+      `client_id=${AUTH0_CLIENT_ID}&` +
+      `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+      `scope=openid profile email&` +
+      `audience=${encodeURIComponent(AUTH0_AUDIENCE)}&` +
+      `state=${state}&` +
+      `nonce=${Math.random().toString(36).substring(7)}`;
+
+    if (connection) {
+      url += `&connection=${connection}`;
+    }
+
+    return url;
+  };
+
+  const loginWithGoogle = async () => {
     if (isLoggingIn || isLoggingOut) {
       console.log('Auth transaction already in progress');
       return;
@@ -96,31 +117,18 @@ const WebAuthProvider = ({ children }) => {
     try {
       setIsLoggingIn(true);
       setError(null);
-
-      const redirectUri = `${FRONTEND_URL}/callback`;
-      const state = Math.random().toString(36).substring(7);
-      
-      // Store state for verification
-      sessionStorage.setItem('auth0_state', state);
-
-      // Build Auth0 authorization URL
-      const authUrl = `https://${AUTH0_DOMAIN}/authorize?` +
-        `response_type=token id_token&` +
-        `client_id=${AUTH0_CLIENT_ID}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `scope=openid profile email&` +
-        `audience=${encodeURIComponent(AUTH0_AUDIENCE)}&` +
-        `state=${state}&` +
-        `nonce=${Math.random().toString(36).substring(7)}`;
-
-      // Open Auth0 login in same window
-      window.location.href = authUrl;
+      window.location.href = buildAuthUrl('google-oauth2');
     } catch (err) {
       console.error('Login error:', err);
       setError(err);
       setIsLoggingIn(false);
       throw err;
     }
+  };
+
+  // Apple Sign in not applicable on web — no-op
+  const loginWithApple = async () => {
+    console.warn('Sign in with Apple is not supported on web');
   };
 
   const logout = async () => {
@@ -178,7 +186,8 @@ const WebAuthProvider = ({ children }) => {
     isAnonymous,
     error,
     accessToken,
-    login,
+    loginWithGoogle,
+    loginWithApple,
     logout,
     getAccessToken,
     isLoggingOut,
@@ -254,9 +263,7 @@ const NativeAuthProvider = ({ children }) => {
     fetchCredentials();
   }, [user, getCredentials]);
 
-  // Login with Auth0 Universal Login
-  const login = async () => {
-    // Prevent concurrent login attempts
+  const authorizeWith = async (connection) => {
     if (isLoggingIn || isLoggingOut) {
       console.log('Auth transaction already in progress');
       return;
@@ -264,17 +271,16 @@ const NativeAuthProvider = ({ children }) => {
 
     try {
       setIsLoggingIn(true);
-      
-      // Get platform-specific redirect URL
+
       const platform = Platform.OS;
       const redirectUrl = getAuth0RedirectUrl(platform);
 
       await authorize({
         scope: 'openid profile email',
         audience: `https://${AUTH0_DOMAIN}/api/v2/`,
-        ...(redirectUrl && { redirectUrl }), // Only include if defined
+        connection,
+        ...(redirectUrl && { redirectUrl }),
       });
-      // Credentials will be fetched by the useEffect above
     } catch (err) {
       console.error('Login error:', err);
       throw err;
@@ -282,6 +288,11 @@ const NativeAuthProvider = ({ children }) => {
       setIsLoggingIn(false);
     }
   };
+
+  const loginWithGoogle = () => authorizeWith('google-oauth2');
+
+  // Apple Sign in with Apple — iOS only
+  const loginWithApple = () => authorizeWith('apple');
 
   // Logout and clear session
   const logout = async () => {
@@ -365,7 +376,8 @@ const NativeAuthProvider = ({ children }) => {
     isAnonymous,
     error,
     accessToken,
-    login,
+    loginWithGoogle,
+    loginWithApple,
     logout,
     getAccessToken,
     isLoggingOut,

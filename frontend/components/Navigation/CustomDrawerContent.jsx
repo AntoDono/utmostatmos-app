@@ -10,7 +10,7 @@ import { authAPI } from '../../utils/api';
 export default function CustomDrawerContent(props) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout, login, isAuthenticated, isAnonymous, isLoggingOut, isLoggingIn, getAccessToken } = useAuth();
+  const { user, logout, isAuthenticated, isAnonymous, isLoggingOut, isLoggingIn, getAccessToken } = useAuth();
   const [userRole, setUserRole] = useState(null);
 
   // Fetch user role when authenticated (only for real users, not anonymous)

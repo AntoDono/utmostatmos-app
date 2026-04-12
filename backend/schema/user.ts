@@ -29,19 +29,34 @@ const findOrCreateUserByAuth0Id = async (
     });
 
     if (!user) {
-        // Create new user with Auth0 data
-        user = await prisma.user.create({
-            data: {
-                auth0Id,
-                email,
-                firstName: firstName || null,
-                lastName: lastName || null,
-                leaderboardScore: 0,
-                role: 'user',
-                loginStreak: 0,
-                lastLoginAt: null,
-            }
-        });
+        // Check if a user with the same email already exists (e.g. previously signed in with Google, now using Apple)
+        const existingByEmail = email ? await prisma.user.findUnique({ where: { email } }) : null;
+
+        if (existingByEmail) {
+            // Link the new auth0Id to the existing account
+            user = await prisma.user.update({
+                where: { email },
+                data: {
+                    auth0Id,
+                    ...(firstName && { firstName }),
+                    ...(lastName && { lastName }),
+                }
+            });
+        } else {
+            // Genuinely new user — create them
+            user = await prisma.user.create({
+                data: {
+                    auth0Id,
+                    email,
+                    firstName: firstName || null,
+                    lastName: lastName || null,
+                    leaderboardScore: 0,
+                    role: 'user',
+                    loginStreak: 0,
+                    lastLoginAt: null,
+                }
+            });
+        }
     } else if (firstName || lastName) {
         // Update existing user's name if provided and different
         const needsUpdate = 

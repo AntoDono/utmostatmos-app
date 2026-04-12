@@ -4,8 +4,8 @@ export const AUTH0_DOMAIN = process.env.EXPO_PUBLIC_AUTH0_DOMAIN;
 export const AUTH0_CLIENT_ID = process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID;
 export const AUTH0_AUDIENCE = process.env.EXPO_PUBLIC_AUTH0_AUDIENCE;
 
-export const APP_BUNDLE_ID = 'org.utmostatmos.utmostatmos';
-export const APP_SCHEME = 'org.utmostatmos.utmostatmos';
+export const APP_BUNDLE_ID = 'com.utmostatmos.ecoedventures';
+export const APP_SCHEME = 'utmostatmos';
 
 /**
  * Generates platform-specific Auth0 redirect URL
