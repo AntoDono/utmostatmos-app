@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  useWindowDimensions,
   Image,
   ScrollView,
   Modal,
@@ -21,6 +22,7 @@ const CONTACT_EMAIL = "admin@utmostatmos.org";
 
 export default function Home() {
   const router = useRouter();
+  const { width: windowWidth } = useWindowDimensions();
   const { user, isAuthenticated, getAccessToken } = useAuth();
   const [showHelpMenu, setShowHelpMenu] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -110,6 +112,8 @@ export default function Home() {
     setFeedbackText("");
   };
 
+  const showLeaderboardText = windowWidth >= 380;
+
   return (
     <View style={{ flex: 1 }}>
 
@@ -118,27 +122,44 @@ export default function Home() {
         {/* HEADER (page-level help + logo only; profile is in global header now) */}
         <View style={styles.header}>
 
-          {/* Help (question mark in circle) - opens dropdown */}
-          <TouchableOpacity
-            style={styles.iconButton}
-            onPress={() => setShowHelpMenu(true)}
-          >
-            <Ionicons name="help-circle-outline" size={28} color="#2c3e50" />
-          </TouchableOpacity>
-
-          {/* Logo - absolutely centered */}
-          <View style={styles.logoWrap} pointerEvents="box-none">
-            <Text style={styles.logo}>Utmost Atmos</Text>
+          <View style={styles.headerSlotLeft}>
+            {/* Help (question mark in circle) - opens dropdown */}
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => setShowHelpMenu(true)}
+            >
+              <Ionicons name="help-circle-outline" size={28} color="#2c3e50" />
+            </TouchableOpacity>
           </View>
 
-          {/* Leaderboard button - top right, same spot as before */}
-          <TouchableOpacity
-            style={styles.leaderboardButton}
-            onPress={() => router.push("/(tabs)/leaderboard")}
-          >
-            <Ionicons name="podium-outline" size={20} color="#2c3e50" />
-            <Text style={styles.leaderboardButtonText}>Leaderboard</Text>
-          </TouchableOpacity>
+          {/* Logo - truly centered on screen */}
+          <View style={styles.headerSlotCenter} pointerEvents="none">
+            <Text style={styles.logo} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.85}>
+              Utmost Atmos
+            </Text>
+          </View>
+
+          <View style={styles.headerSlotRight}>
+            {/* Leaderboard button - top right, same spot as before */}
+            <TouchableOpacity
+              style={styles.leaderboardButton}
+              onPress={() => router.push("/(tabs)/leaderboard")}
+              accessibilityRole="button"
+              accessibilityLabel="Leaderboard"
+            >
+              {showLeaderboardText ? (
+                <Text
+                  style={styles.leaderboardButtonText}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.85}
+                >
+                  Leaderboard
+                </Text>
+              ) : null}
+            </TouchableOpacity>
+          </View>
 
         </View>
 
@@ -389,24 +410,39 @@ const styles = StyleSheet.create({
 
   header: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 20,
     marginTop: 50,
   },
 
-  logoWrap: {
-    position: "absolute",
-    left: 0,
-    right: 0,
+  headerSlotLeft: {
+    flex: 1,
+    alignItems: "flex-start",
+    justifyContent: "center",
+    minWidth: 44,
+  },
+
+  headerSlotCenter: {
+    flexShrink: 1,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 10,
+    maxWidth: "60%",
+  },
+
+  headerSlotRight: {
+    flex: 1,
+    alignItems: "flex-end",
+    justifyContent: "center",
+    minWidth: 44,
   },
 
   logo: {
     fontSize: 18,
     fontWeight: "700",
     color: "#2c3e50",
+    textAlign: "center",
   },
 
   iconButton: {
@@ -420,15 +456,16 @@ const styles = StyleSheet.create({
   leaderboardButton: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
     paddingVertical: 4,
     paddingHorizontal: 8,
+    maxWidth: 140,
   },
 
   leaderboardButtonText: {
     fontSize: 12,
     color: "#2c3e50",
     fontWeight: "600",
+    flexShrink: 1,
   },
 
   avatar: {
